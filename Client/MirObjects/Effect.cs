@@ -23,6 +23,8 @@ namespace Client.MirObjects
         public MapObject Owner;
 
         public int Light = 6;
+        public Color LightColour = Color.White;
+
         public bool Blend = true;
         public float Rate = 1F;
         public Point DrawLocation;
@@ -34,8 +36,6 @@ namespace Client.MirObjects
         public long CurrentDelay;
         public long Delay;
 
-        //public BuffType LinkedToBuff;
-        
         public event EventHandler Complete;
         public event EventHandler Played;
 
@@ -168,6 +168,8 @@ namespace Client.MirObjects
             Destination = target;
 
             Direction = MapControl.Direction16(Source, Destination);
+
+
         }
 
         public override void Process()
@@ -369,7 +371,6 @@ namespace Client.MirObjects
         }
     }
 
-
     public class SpecialEffect : Effect
     {
         public uint EffectType = 0;
@@ -458,6 +459,49 @@ namespace Client.MirObjects
                 MapControl.Effects.Remove(this);
         }
 
+    }
+
+    public class LightEffect : Effect
+    {
+        public LightEffect(int duration, MapObject owner, long starttime = 0, int lightDistance = 6, Color? lightColour = null)
+            : base(null, 0, 0, duration, owner, starttime)
+        {
+            Light = lightDistance;
+            LightColour = lightColour == null ? Color.White : (Color)lightColour;
+        }
+
+        public LightEffect(int duration, Point source, long starttime = 0, int lightDistance = 6, Color? lightColour = null)
+            : base(null, 0, 0, duration, source, starttime)
+        {
+            Light = lightDistance;
+            LightColour = lightColour == null ? Color.White : (Color)lightColour;
+        }
+
+        public override void Process()
+        {
+            if (CMain.Time >= Start + Duration)
+                Remove();
+            GameScene.Scene.MapControl.TextureValid = false;
+
+        }
+
+        public override void Draw()
+        {
+
+            if (CMain.Time < Start) return;
+
+
+            if (Owner != null)
+            {
+                DrawLocation = Owner.DrawLocation;
+            }
+            else
+            {
+                DrawLocation = new Point((Source.X - MapObject.User.Movement.X + MapControl.OffSetX) * MapControl.CellWidth,
+                                         (Source.Y - MapObject.User.Movement.Y + MapControl.OffSetY) * MapControl.CellHeight);
+                DrawLocation.Offset(MapObject.User.OffSetMove);
+            }
+        }
     }
 
 }

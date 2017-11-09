@@ -1,5 +1,7 @@
 ﻿using System.IO;
+using System;
 using Client.MirSounds;
+using System.Windows.Forms;
 
 namespace Client
 {
@@ -7,12 +9,32 @@ namespace Client
     {
         public const long CleanDelay = 600000;
         public static int ScreenWidth = 800, ScreenHeight = 600;
-        private static readonly InIReader Reader = new InIReader(@".\Mir2Config.ini");
+        private static InIReader Reader = new InIReader(@".\Mir2Config.ini");
+
+        private static bool _useTestConfig;
+        public static bool UseTestConfig
+        {
+            get
+            {
+                return _useTestConfig;
+            }
+            set 
+            {
+                if (value == true)
+                {
+                    Reader = new InIReader(@".\Mir2Test.ini");
+                }
+                _useTestConfig = value;
+            }
+        }
 
         public const string DataPath = @".\Data\",
                             MapPath = @".\Map\",
                             SoundPath = @".\Sound\",
+                            ExtraDataPath = @".\Data\Extra\",
+                            ShadersPath = @".\Data\Shaders\",
                             MonsterPath = @".\Data\Monster\",
+                            GatePath = @".\Data\Gate\",
                             NPCPath = @".\Data\NPC\",
                             CArmourPath = @".\Data\CArmour\",
                             CWeaponPath = @".\Data\CWeapon\",
@@ -28,7 +50,11 @@ namespace Client
                             ARHumEffectPath = @".\Data\ARHumEffect\",
                             MountPath = @".\Data\Mount\",
                             FishingPath = @".\Data\Fishing\",
-                            PetsPath = @".\Data\Pet\";
+                            PetsPath = @".\Data\Pet\",
+                            TransformPath = @".\Data\Transform\",
+                            TransformMountsPath = @".\Data\TransformRide2\",
+                            TransformEffectPath = @".\Data\TransformEffect\",
+                            TransformWeaponEffectPath = @".\Data\TransformWeaponEffect\";
 
         //Logs
         public static bool LogErrors = true;
@@ -40,13 +66,20 @@ namespace Client
         public static string FontName = "Tahoma"; //"MS Sans Serif"
         public static bool FPSCap = true;
         public static int MaxFPS = 100;
-        public static bool HighResolution = false;
+        public static int Resolution = 1024;
         public static bool DebugMode = false;
 
         //Network
-        public static bool UseConfig = false;
+#if DEBUG
+        public static bool UseConfig = true;
         public static string IPAddress = "127.0.0.1";
         public static int Port = 7000;
+#else
+        public static bool UseConfig = true;
+        public static string IPAddress = "127.0.0.1";
+        public static int Port = 7000;
+#endif
+
         public const int TimeOut = 5000;
 
         //Sound
@@ -91,14 +124,21 @@ namespace Client
         public static bool
             SkillMode = false,
             SkillBar = true,
-            SkillSet = true,
+            //SkillSet = true,
             Effect = true,
             LevelEffect = true,
             DropView = true,
             NameView = true,
             HPView = true,
-            TransparentChat = false;
+            TransparentChat = false,
+            DuraView = false,
+            DisplayDamage = true,
+            TargetDead = false;
 
+        public static int[,] SkillbarLocation = new int[2, 2] { { 0, 0 }, { 216, 0 }  };
+
+        //Quests
+        public static int[] TrackedQuests = new int[5];
 
         //Chat
         public static bool
@@ -121,6 +161,19 @@ namespace Client
             FilterGroupChat = false,
             FilterGuildChat = false;
 
+
+        //AutoPatcher
+        public static bool P_Patcher = true;
+        public static string P_Host = @"ftp://160.16.69.9"; //ftp://212.67.209.184
+        public static string P_PatchFileName = @"PList.gz";
+        public static bool P_NeedLogin = true;
+        public static string P_Login = "mir";
+        public static string P_Password = "mir";
+        public static string P_ServerName = "C#中文版";
+        public static string P_BrowserAddress = "http://launcher.mir2wiki.com/web/";
+        public static string P_Client = Application.StartupPath + "\\";
+        public static bool P_AutoStart = false;
+
         public static void Load()
         {
             if (!Directory.Exists(DataPath)) Directory.CreateDirectory(DataPath);
@@ -131,7 +184,7 @@ namespace Client
             FullScreen = Reader.ReadBoolean("Graphics", "FullScreen", FullScreen);
             TopMost = Reader.ReadBoolean("Graphics", "AlwaysOnTop", TopMost);
             FPSCap = Reader.ReadBoolean("Graphics", "FPSCap", FPSCap);
-            HighResolution = Reader.ReadBoolean("Graphics", "HighResolution", HighResolution);
+            Resolution = Reader.ReadInt32("Graphics", "Resolution", Resolution);
             DebugMode = Reader.ReadBoolean("Graphics", "DebugMode", DebugMode);
 
             //Network
@@ -157,7 +210,7 @@ namespace Client
 
             SkillMode = Reader.ReadBoolean("Game", "SkillMode", SkillMode);
             SkillBar = Reader.ReadBoolean("Game", "SkillBar", SkillBar);
-            SkillSet = Reader.ReadBoolean("Game", "SkillSet", SkillSet);
+            //SkillSet = Reader.ReadBoolean("Game", "SkillSet", SkillSet);
             Effect = Reader.ReadBoolean("Game", "Effect", Effect);
             LevelEffect = Reader.ReadBoolean("Game", "LevelEffect", Effect);
             DropView = Reader.ReadBoolean("Game", "DropView", DropView);
@@ -165,6 +218,15 @@ namespace Client
             HPView = Reader.ReadBoolean("Game", "HPMPView", HPView);
             FontName = Reader.ReadString("Game", "FontName", FontName);
             TransparentChat = Reader.ReadBoolean("Game", "TransparentChat", TransparentChat);
+            DisplayDamage = Reader.ReadBoolean("Game", "DisplayDamage", DisplayDamage);
+            TargetDead = Reader.ReadBoolean("Game", "TargetDead", TargetDead);
+            DuraView = Reader.ReadBoolean("Game", "DuraWindow", DuraView);
+
+            for (int i = 0; i < SkillbarLocation.Length / 2; i++)
+            {
+                SkillbarLocation[i, 0] = Reader.ReadInt32("Game", "Skillbar" + i.ToString() + "X", SkillbarLocation[i, 0]);
+                SkillbarLocation[i, 1] = Reader.ReadInt32("Game", "Skillbar" + i.ToString() + "Y", SkillbarLocation[i, 1]);
+            }
 
             //Chat
             ShowNormalChat = Reader.ReadBoolean("Chat", "ShowNormalChat", ShowNormalChat);
@@ -184,6 +246,21 @@ namespace Client
             FilterMentorChat = Reader.ReadBoolean("Filter", "FilterMentorChat", FilterMentorChat);
             FilterGroupChat = Reader.ReadBoolean("Filter", "FilterGroupChat", FilterGroupChat);
             FilterGuildChat = Reader.ReadBoolean("Filter", "FilterGuildChat", FilterGuildChat);
+
+            //AutoPatcher
+            P_Patcher = Reader.ReadBoolean("Launcher", "Enabled", P_Patcher);
+            P_Host = Reader.ReadString("Launcher", "Host", P_Host);
+            P_PatchFileName = Reader.ReadString("Launcher", "PatchFile", P_PatchFileName);
+            P_NeedLogin = Reader.ReadBoolean("Launcher", "NeedLogin", P_NeedLogin);
+            P_Login = Reader.ReadString("Launcher", "Login", P_Login);
+            P_Password = Reader.ReadString("Launcher", "Password", P_Password);
+            P_AutoStart = Reader.ReadBoolean("Launcher", "AutoStart", P_AutoStart);
+            P_ServerName = Reader.ReadString("Launcher", "ServerName", P_ServerName);
+            P_BrowserAddress = Reader.ReadString("Launcher", "Browser", P_BrowserAddress);
+
+            if (!P_Host.EndsWith("/")) P_Host += "/";
+            if (P_Host.StartsWith("www.", StringComparison.OrdinalIgnoreCase)) P_Host = P_Host.Insert(0, "http://");
+            if (P_BrowserAddress.StartsWith("www.", StringComparison.OrdinalIgnoreCase)) P_BrowserAddress = P_BrowserAddress.Insert(0, "http://");
         }
 
         public static void Save()
@@ -192,7 +269,7 @@ namespace Client
             Reader.Write("Graphics", "FullScreen", FullScreen);
             Reader.Write("Graphics", "AlwaysOnTop", TopMost);
             Reader.Write("Graphics", "FPSCap", FPSCap);
-            Reader.Write("Graphics", "HighResolution", HighResolution);
+            Reader.Write("Graphics", "Resolution", Resolution);
             Reader.Write("Graphics", "DebugMode", DebugMode);
 
             //Sound
@@ -200,9 +277,11 @@ namespace Client
             Reader.Write("Sound", "Music", MusicVolume);
 
             //Game
+            Reader.Write("Game", "AccountID", AccountID);
+            Reader.Write("Game", "Password", Password);
             Reader.Write("Game", "SkillMode", SkillMode);
             Reader.Write("Game", "SkillBar", SkillBar);
-            Reader.Write("Game", "SkillSet", SkillSet);
+            //Reader.Write("Game", "SkillSet", SkillSet);
             Reader.Write("Game", "Effect", Effect);
             Reader.Write("Game", "LevelEffect", LevelEffect);
             Reader.Write("Game", "DropView", DropView);
@@ -210,6 +289,16 @@ namespace Client
             Reader.Write("Game", "HPMPView", HPView);
             Reader.Write("Game", "FontName", FontName);
             Reader.Write("Game", "TransparentChat", TransparentChat);
+            Reader.Write("Game", "DisplayDamage", DisplayDamage);
+            Reader.Write("Game", "TargetDead", TargetDead);
+            Reader.Write("Game", "DuraWindow", DuraView);
+
+            for (int i = 0; i < SkillbarLocation.Length / 2; i++)
+            {
+
+                Reader.Write("Game", "Skillbar" + i.ToString() + "X", SkillbarLocation[i, 0]);
+                Reader.Write("Game", "Skillbar" + i.ToString() + "Y", SkillbarLocation[i, 1]);
+            }
 
             //Chat
             Reader.Write("Chat", "ShowNormalChat", ShowNormalChat);
@@ -229,6 +318,34 @@ namespace Client
             Reader.Write("Filter", "FilterMentorChat", FilterMentorChat);
             Reader.Write("Filter", "FilterGroupChat", FilterGroupChat);
             Reader.Write("Filter", "FilterGuildChat", FilterGuildChat);
+
+            //AutoPatcher
+            Reader.Write("Launcher", "Enabled", P_Patcher);
+            Reader.Write("Launcher", "Host", P_Host);
+            Reader.Write("Launcher", "PatchFile", P_PatchFileName);
+            Reader.Write("Launcher", "NeedLogin", P_NeedLogin);
+            Reader.Write("Launcher", "Login", P_Login);
+            Reader.Write("Launcher", "Password", P_Password);
+            Reader.Write("Launcher", "ServerName", P_ServerName);
+            Reader.Write("Launcher", "Browser", P_BrowserAddress);
+            Reader.Write("Launcher", "AutoStart", P_AutoStart);
+        }
+
+        public static void LoadTrackedQuests(string Charname)
+        {
+            //Quests
+            for (int i = 0; i < TrackedQuests.Length; i++)
+            {
+                TrackedQuests[i] = Reader.ReadInt32("Q-" + Charname, "Quest-" + i.ToString(), -1);
+            }
+        }
+        public static void SaveTrackedQuests(string Charname)
+        {
+            //Quests
+            for (int i = 0; i < TrackedQuests.Length; i++)
+            {
+                Reader.Write("Q-" + Charname, "Quest-" + i.ToString(), TrackedQuests[i]);
+            }
         }
     }
 }

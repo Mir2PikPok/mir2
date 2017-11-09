@@ -11,7 +11,9 @@ namespace AutoPatcherAdmin
     public partial class AMain : Form
     {
         public const string PatchFileName = @"PList.gz";
-        
+
+        public string[] ExcludeList = new string[] { "Thumbs.db" };
+
         public List<FileInformation> OldList, NewList;
         public Queue<FileInformation> UploadList;
         private Stopwatch _stopwatch = Stopwatch.StartNew();
@@ -53,7 +55,7 @@ namespace AutoPatcherAdmin
                         ParseOld(reader);
                 }
 
-                ActionLabel.Text = "Checking Files...";
+                ActionLabel.Text = "正在检查文件...";
                 Refresh();
                 
                 CheckFiles();
@@ -61,6 +63,9 @@ namespace AutoPatcherAdmin
                 for (int i = 0; i < NewList.Count; i++)
                 {
                     FileInformation info = NewList[i];
+
+                    if (InExcludeList(info.FileName)) continue;
+
                     if (NeedUpdate(info))
                     {
                         UploadList.Enqueue(info);
@@ -83,7 +88,7 @@ namespace AutoPatcherAdmin
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString());
-                ActionLabel.Text = "Error...";
+                ActionLabel.Text = "错误...";
             }
 
         }
@@ -98,12 +103,12 @@ namespace AutoPatcherAdmin
 
                 Upload(new FileInformation {FileName = PatchFileName}, CreateNew());
                 UploadList = null;
-                ActionLabel.Text = string.Format("Complete...");
+                ActionLabel.Text = string.Format("已完成...");
                 ProcessButton.Enabled = true;
                 return;
             }
 
-            ActionLabel.Text = string.Format("Uploading... Files: {0}, Total Size: {1:#,##0}MB (Uncompressed)", UploadList.Count, (_totalBytes - _completedBytes)/1048576);
+            ActionLabel.Text = string.Format("上传中... 文件: {0}, 总大小: {1:#,##0}MB (未压缩)", UploadList.Count, (_totalBytes - _completedBytes)/1048576);
 
             progressBar1.Value = (int) (_completedBytes*100/_totalBytes) > 100 ? 100 : (int) (_completedBytes*100/_totalBytes);
 
@@ -121,7 +126,7 @@ namespace AutoPatcherAdmin
 
                 try
                 {
-                    FtpWebRequest request = (FtpWebRequest) WebRequest.Create(new Uri(Settings.Host + Path.ChangeExtension(OldList[i].FileName, ".gz")));
+                    FtpWebRequest request = (FtpWebRequest) WebRequest.Create(new Uri(Settings.Host + OldList[i].FileName + ".gz"));
                     request.Credentials = new NetworkCredential(Settings.Login, Settings.Password);
                     request.Method = WebRequestMethods.Ftp.DeleteFile;
                     FtpWebResponse response = (FtpWebResponse) request.GetResponse();
@@ -138,7 +143,7 @@ namespace AutoPatcherAdmin
         {
             for (int i = 0; i < NewList.Count; i++)
             {
-                if (fileName.EndsWith(NewList[i].FileName))
+                if (fileName.EndsWith(NewList[i].FileName) && !InExcludeList(NewList[i].FileName))
                     return true;
             }
 
@@ -168,11 +173,22 @@ namespace AutoPatcherAdmin
         }
         public void CheckFiles()
         {
-            string[] files = Directory.GetFiles(Settings.Client, "*.*", SearchOption.AllDirectories);
+            string[] files = Directory.GetFiles(Settings.Client, "*.*" ,SearchOption.AllDirectories);
 
             for (int i = 0; i < files.Length; i++)
                 NewList.Add(GetFileInformation(files[i]));
         }
+
+        public bool InExcludeList(string fileName)
+        {
+            foreach (var item in ExcludeList)
+            {
+                if (fileName.EndsWith(item)) return true;
+            }
+
+            return false;
+        }
+
         public bool NeedUpdate(FileInformation info)
         {
             for (int i = 0; i < OldList.Count; i++)
@@ -213,7 +229,7 @@ namespace AutoPatcherAdmin
                 using (WebClient client = new WebClient())
                 {
                     client.Credentials = new NetworkCredential(Settings.Login, Settings.Password);
-                    return Decompress(client.DownloadData(Settings.Host + Path.ChangeExtension(fileName, ".gz")));
+                    return client.DownloadData(Settings.Host + "/" + fileName);
                 }
             }
             catch
@@ -225,11 +241,14 @@ namespace AutoPatcherAdmin
         {
             string fileName = info.FileName.Replace(@"\", "/");
 
+            if (fileName != "AutoPatcher.gz" && fileName != "PList.gz")
+                fileName += ".gz";
+
             using (WebClient client = new WebClient())
             {
                 client.Credentials = new NetworkCredential(Settings.Login, Settings.Password);
 
-                byte[] data = !retry ? raw : Compress(raw);
+                byte[] data = !retry ? raw : raw;
                 info.Compressed = data.Length;
 
                 client.UploadProgressChanged += (o, e) =>
@@ -255,9 +274,9 @@ namespace AutoPatcherAdmin
 
                         if (info.FileName == PatchFileName)
                         {
-                            FileLabel.Text = "Complete...";
-                            SizeLabel.Text = "Complete...";
-                            SpeedLabel.Text = "Complete...";
+                            FileLabel.Text = "已完成...";
+                            SizeLabel.Text = "已完成...";
+                            SpeedLabel.Text = "已完成...";
                             return;
                         }
 
@@ -267,36 +286,42 @@ namespace AutoPatcherAdmin
 
                 _stopwatch = Stopwatch.StartNew();
 
-
-                client.UploadDataAsync(new Uri(Settings.Host  + Path.ChangeExtension(fileName, ".gz")), data);
+                client.UploadDataAsync(new Uri(Settings.Host + fileName), data);
             }
         }
 
         public void CheckDirectory(string directory)
         {
+            string Directory = "";
+            char[] splitChar = { '\\' };
+            string[] DirectoryList = directory.Split(splitChar);
+
+            foreach (string directoryCheck in DirectoryList)
+            {
+                Directory += "\\" + directoryCheck;
             try
-            {
+              {
+                        if (string.IsNullOrEmpty(Directory)) return;
 
-                if (string.IsNullOrEmpty(directory)) return;
+                        FtpWebRequest request = (FtpWebRequest)WebRequest.Create(Settings.Host + Directory + "/");
+                        request.Credentials = new NetworkCredential(Settings.Login, Settings.Password);
+                        request.Method = WebRequestMethods.Ftp.MakeDirectory;
 
-                FtpWebRequest request = (FtpWebRequest)WebRequest.Create(Settings.Host + directory + "/");
-                request.Credentials = new NetworkCredential(Settings.Login, Settings.Password);
-                request.Method = WebRequestMethods.Ftp.MakeDirectory;
+                        request.UsePassive = true;
+                        request.UseBinary = true;
+                        request.KeepAlive = false;
+                        FtpWebResponse response = (FtpWebResponse)request.GetResponse();
+                        Stream ftpStream = response.GetResponseStream();
 
-                request.UsePassive = true;
-                request.UseBinary = true;
-                request.KeepAlive = false;
-                FtpWebResponse response = (FtpWebResponse) request.GetResponse();
-                Stream ftpStream = response.GetResponseStream();
+                        if (ftpStream != null) ftpStream.Close();
+                        response.Close();
 
-                if (ftpStream != null) ftpStream.Close();
-                response.Close();
-            }
-            catch (WebException ex)
-            {
-                FtpWebResponse response = (FtpWebResponse) ex.Response;
-                response.Close();
-
+              }
+                    catch (WebException ex)
+                    {
+                        FtpWebResponse response = (FtpWebResponse)ex.Response;
+                        response.Close();
+                    }
             }
         }
 
@@ -368,10 +393,21 @@ namespace AutoPatcherAdmin
             Upload(new FileInformation { FileName = PatchFileName }, CreateNew());
         }
 
+        private void LocalizeLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            SourceLinkLabel.LinkVisited = true;
+            Process.Start("https://github.com/zhzhwcn/mir2/tree/cn-master");
+        }
+
         private void SourceLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             SourceLinkLabel.LinkVisited = true;
             Process.Start("http://www.lomcn.org/forum/member.php?141-Jamie-Hello");
+        }
+
+        private void AMain_Load(object sender, EventArgs e)
+        {
+
         }
 
     }

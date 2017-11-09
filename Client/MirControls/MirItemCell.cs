@@ -72,6 +72,8 @@ namespace Client.MirControls
                         return NPCAwakeDialog.Items;
                     case MirGridType.Mail:
                         return MailComposeParcelDialog.Items;
+                    case MirGridType.Refine:
+                        return GameScene.Refine;
                     default:
                         throw new NotImplementedException();
                 }
@@ -271,7 +273,7 @@ namespace Client.MirControls
             if (Locked || GridType == MirGridType.Inspect || GridType == MirGridType.TrustMerchant || GridType == MirGridType.GuildStorage) return;
 
             if (MapObject.User.Fishing) return;
-            if (MapObject.User.RidingMount && Item.Info.Type != ItemType.Scroll && Item.Info.Type != ItemType.Potion && Item.Info.Type != ItemType.Torch) return;
+            if (MapObject.User.RidingMount && Item.Info.Type != ItemType.卷轴 && Item.Info.Type != ItemType.药剂 && Item.Info.Type != ItemType.火把) return;
 
             if (GridType == MirGridType.BuyBack)
             {
@@ -279,7 +281,7 @@ namespace Client.MirControls
                 return;
             }
 
-            if (GridType == MirGridType.Equipment)
+            if (GridType == MirGridType.Equipment || GridType == MirGridType.Mount || GridType == MirGridType.Fishing)
             {
                 RemoveItem();
                 return;
@@ -293,7 +295,7 @@ namespace Client.MirControls
                 return;
             switch (Item.Info.Type)
             {
-                case ItemType.Weapon:
+                case ItemType.武器:
                     if (dialog.Grid[(int)EquipmentSlot.Weapon].CanWearItem(Item))
                     {
                         Network.Enqueue(new C.EquipItem { Grid = GridType, UniqueID = Item.UniqueID, To = (int)EquipmentSlot.Weapon });
@@ -301,7 +303,7 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Armour:
+                case ItemType.护甲:
                     if (dialog.Grid[(int)EquipmentSlot.Armour].CanWearItem(Item))
                     {
                         Network.Enqueue(new C.EquipItem { Grid = GridType, UniqueID = Item.UniqueID, To = (int)EquipmentSlot.Armour });
@@ -309,7 +311,7 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Helmet:
+                case ItemType.头盔:
                     if (dialog.Grid[(int)EquipmentSlot.Helmet].CanWearItem(Item))
                     {
                         Network.Enqueue(new C.EquipItem { Grid = GridType, UniqueID = Item.UniqueID, To = (int)EquipmentSlot.Helmet });
@@ -317,7 +319,7 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Necklace:
+                case ItemType.项链:
                     if (dialog.Grid[(int)EquipmentSlot.Necklace].CanWearItem(Item))
                     {
                         Network.Enqueue(new C.EquipItem { Grid = GridType, UniqueID = Item.UniqueID, To = (int)EquipmentSlot.Necklace });
@@ -325,8 +327,8 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Bracelet:
-                    if ((dialog.Grid[(int)EquipmentSlot.BraceletR].Item == null || dialog.Grid[(int)EquipmentSlot.BraceletR].Item.Info.Type == ItemType.Amulet) && dialog.Grid[(int)EquipmentSlot.BraceletR].CanWearItem(Item))
+                case ItemType.手镯:
+                    if ((dialog.Grid[(int)EquipmentSlot.BraceletR].Item == null || dialog.Grid[(int)EquipmentSlot.BraceletR].Item.Info.Type == ItemType.护身符) && dialog.Grid[(int)EquipmentSlot.BraceletR].CanWearItem(Item))
                     {
                         Network.Enqueue(new C.EquipItem { Grid = GridType, UniqueID = Item.UniqueID, To = (int)EquipmentSlot.BraceletR });
                         dialog.Grid[(int)EquipmentSlot.BraceletR].Locked = true;
@@ -339,7 +341,7 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Ring:
+                case ItemType.戒指:
                     if (dialog.Grid[(int)EquipmentSlot.RingR].Item == null && dialog.Grid[(int)EquipmentSlot.RingR].CanWearItem(Item))
                     {
                         Network.Enqueue(new C.EquipItem { Grid = GridType, UniqueID = Item.UniqueID, To = (int)EquipmentSlot.RingR });
@@ -353,10 +355,10 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Amulet:
+                case ItemType.护身符:
                     //if (Item.Info.Shape == 0) return;
 
-                    if (dialog.Grid[(int)EquipmentSlot.Amulet].Item != null && Item.Info.Type == ItemType.Amulet)
+                    if (dialog.Grid[(int)EquipmentSlot.Amulet].Item != null && Item.Info.Type == ItemType.护身符)
                     {
                         if (dialog.Grid[(int)EquipmentSlot.Amulet].Item.Info == Item.Info && dialog.Grid[(int)EquipmentSlot.Amulet].Item.Count < dialog.Grid[(int)EquipmentSlot.Amulet].Item.Info.StackSize)
                         {
@@ -374,7 +376,7 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Belt:
+                case ItemType.腰带:
                     if (dialog.Grid[(int)EquipmentSlot.Belt].CanWearItem(Item))
                     {
                         Network.Enqueue(new C.EquipItem { Grid = GridType, UniqueID = Item.UniqueID, To = (int)EquipmentSlot.Belt });
@@ -382,7 +384,7 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Boots:
+                case ItemType.鞋:
                     if (dialog.Grid[(int)EquipmentSlot.Boots].CanWearItem(Item))
                     {
                         Network.Enqueue(new C.EquipItem { Grid = GridType, UniqueID = Item.UniqueID, To = (int)EquipmentSlot.Boots });
@@ -390,7 +392,7 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Stone:
+                case ItemType.守护石:
                     if (dialog.Grid[(int)EquipmentSlot.Stone].CanWearItem(Item))
                     {
                         Network.Enqueue(new C.EquipItem { Grid = GridType, UniqueID = Item.UniqueID, To = (int)EquipmentSlot.Stone });
@@ -398,7 +400,7 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Torch:
+                case ItemType.火把:
                     if (dialog.Grid[(int)EquipmentSlot.Torch].CanWearItem(Item))
                     {
                         Network.Enqueue(new C.EquipItem { Grid = GridType, UniqueID = Item.UniqueID, To = (int)EquipmentSlot.Torch });
@@ -406,12 +408,13 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Potion:
-                case ItemType.Scroll:
-                case ItemType.Book:
-                case ItemType.Food:
-                case ItemType.Script:
-                case ItemType.Pets:
+                case ItemType.药剂:
+                case ItemType.卷轴:
+                case ItemType.书籍:
+                case ItemType.食物:
+                case ItemType.手稿:
+                case ItemType.宠物:
+                case ItemType.变换:
                     if (CanUseItem() && GridType == MirGridType.Inventory)
                     {
                         if (CMain.Time < GameScene.UseItemTime) return;
@@ -419,11 +422,11 @@ namespace Client.MirControls
 
                         if (Item.Count == 1 && ItemSlot < 6)
                         {
-                            for (int i = 6; i < GameScene.User.Inventory.Length; i++)
+                            for (int i = GameScene.User.BeltIdx; i < GameScene.User.Inventory.Length; i++)
                                 if (ItemArray[i] != null && ItemArray[i].Info == Item.Info)
                                 {
                                     Network.Enqueue(new C.MoveItem { Grid = MirGridType.Inventory, From = i, To = ItemSlot });
-                                    GameScene.Scene.InventoryDialog.Grid[i - 6].Locked = true;
+                                    GameScene.Scene.InventoryDialog.Grid[i - GameScene.User.BeltIdx].Locked = true;
                                     break;
                                 }
                         }
@@ -431,7 +434,7 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Mount:
+                case ItemType.坐骑:
                     if (dialog.Grid[(int)EquipmentSlot.Mount].CanWearItem(Item))
                     {
                         Network.Enqueue(new C.EquipItem { Grid = GridType, UniqueID = Item.UniqueID, To = (int)EquipmentSlot.Mount });
@@ -440,13 +443,13 @@ namespace Client.MirControls
                     }
                     break;
                 case ItemType.Reins:
-                case ItemType.Bells:
-                case ItemType.Ribbon:
-                case ItemType.Saddle:
-                case ItemType.Mask:
-                case ItemType.Hook:
+                case ItemType.铃铛:
+                case ItemType.色带:
+                case ItemType.马鞍:
+                case ItemType.面具:
+                case ItemType.鱼钩:
                 case ItemType.Float:
-                case ItemType.Bait:
+                case ItemType.饵:
                 case ItemType.Finder:
                 case ItemType.Reel:
                     UseSlotItem();
@@ -474,7 +477,7 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Bells:
+                case ItemType.铃铛:
                     mountDialog = GameScene.Scene.MountDialog;
                     if (mountDialog.Grid[(int)MountSlot.Bells].CanWearItem(Item))
                     {
@@ -483,7 +486,7 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Ribbon:
+                case ItemType.色带:
                     mountDialog = GameScene.Scene.MountDialog;
                     if (mountDialog.Grid[(int)MountSlot.Ribbon].CanWearItem(Item))
                     {
@@ -492,7 +495,7 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Saddle:
+                case ItemType.马鞍:
                     mountDialog = GameScene.Scene.MountDialog;
                     if (mountDialog.Grid[(int)MountSlot.Saddle].CanWearItem(Item))
                     {
@@ -501,7 +504,7 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Mask:
+                case ItemType.面具:
                     mountDialog = GameScene.Scene.MountDialog;
                     if (mountDialog.Grid[(int)MountSlot.Mask].CanWearItem(Item))
                     {
@@ -510,7 +513,7 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Hook:
+                case ItemType.鱼钩:
                     fishingDialog = GameScene.Scene.FishingDialog;
                     if (fishingDialog.Grid[(int)FishingSlot.Hook].CanWearItem(Item))
                     {
@@ -528,10 +531,10 @@ namespace Client.MirControls
                         Locked = true;
                     }
                     break;
-                case ItemType.Bait:
+                case ItemType.饵:
                     fishingDialog = GameScene.Scene.FishingDialog;
 
-                    if (fishingDialog.Grid[(int)FishingSlot.Bait].Item != null && Item.Info.Type == ItemType.Bait)
+                    if (fishingDialog.Grid[(int)FishingSlot.Bait].Item != null && Item.Info.Type == ItemType.饵)
                     {
                         if (fishingDialog.Grid[(int)FishingSlot.Bait].Item.Info == Item.Info && fishingDialog.Grid[(int)FishingSlot.Bait].Item.Count < fishingDialog.Grid[(int)FishingSlot.Bait].Item.Info.StackSize)
                         {
@@ -575,28 +578,32 @@ namespace Client.MirControls
         {
             int count = 0;
 
-            for (int i = 0; i < GameScene.Scene.InventoryDialog.Grid.Length; i++)
-                if (GameScene.Scene.InventoryDialog.Grid[i].Item != null) count++;
+            for (int i = 0; i < GameScene.User.Inventory.Length; i++)
+            {
+                MirItemCell itemCell = i < GameScene.User.BeltIdx ? GameScene.Scene.BeltDialog.Grid[i] : GameScene.Scene.InventoryDialog.Grid[i - GameScene.User.BeltIdx];
 
-            if (Item == null || count < 1 || (MapObject.User.RidingMount && Item.Info.Type != ItemType.Torch)) return;
+                if (itemCell.Item == null) count++;
+            }
+
+            if (Item == null || count < 1 || (MapObject.User.RidingMount && Item.Info.Type != ItemType.火把)) return;
 
             if (Item.Info.StackSize > 1)
             {
                 UserItem item = null;
 
-                for (int i = 0; i < GameScene.Scene.InventoryDialog.Grid.Length; i++)
+                for (int i = 0; i < GameScene.User.Inventory.Length; i++)
                 {
-                    MirItemCell cell = GameScene.Scene.InventoryDialog.Grid[i];
+                    MirItemCell itemCell = i < GameScene.User.BeltIdx ? GameScene.Scene.BeltDialog.Grid[i] : GameScene.Scene.InventoryDialog.Grid[i - GameScene.User.BeltIdx];
 
-                    if (cell.Item == null || cell.Item.Info != Item.Info) continue;
+                    if (itemCell.Item == null || itemCell.Item.Info != Item.Info) continue;
 
-                    item = cell.Item;
+                    item = itemCell.Item;
                 }
 
                 if (item != null && ((item.Count + Item.Count) <= item.Info.StackSize))
                 {
                     //Merge.
-                    Network.Enqueue(new C.MergeItem { GridFrom = MirGridType.Equipment, GridTo = MirGridType.Inventory, IDFrom = Item.UniqueID, IDTo = item.UniqueID });
+                    Network.Enqueue(new C.MergeItem { GridFrom = GridType, GridTo = MirGridType.Inventory, IDFrom = Item.UniqueID, IDTo = item.UniqueID });
 
                     Locked = true;
 
@@ -605,13 +612,30 @@ namespace Client.MirControls
                 }
             }
 
-            for (int i = 0; i < GameScene.Scene.InventoryDialog.Grid.Length; i++)
+
+            for (int i = 0; i < GameScene.User.Inventory.Length; i++)
             {
-                MirItemCell itemCell = GameScene.Scene.InventoryDialog.Grid[i];
+                MirItemCell itemCell = null;
+
+                if (Item.Info.Type == ItemType.护身符)
+                {
+                    itemCell = i < GameScene.User.BeltIdx ? GameScene.Scene.BeltDialog.Grid[i] : GameScene.Scene.InventoryDialog.Grid[i - GameScene.User.BeltIdx];
+                }
+                else
+                {
+                    itemCell = i < (GameScene.User.Inventory.Length - GameScene.User.BeltIdx) ? GameScene.Scene.InventoryDialog.Grid[i] : GameScene.Scene.BeltDialog.Grid[i - GameScene.User.Inventory.Length];
+                }
 
                 if (itemCell.Item != null) continue;
 
-                Network.Enqueue(new C.RemoveItem { Grid = MirGridType.Inventory, UniqueID = Item.UniqueID, To = itemCell.ItemSlot });
+                if (GridType != MirGridType.Equipment)
+                {
+                    Network.Enqueue(new C.RemoveSlotItem { Grid = GridType, UniqueID = Item.UniqueID, To = itemCell.ItemSlot, GridTo = MirGridType.Inventory });
+                }
+                else
+                {
+                    Network.Enqueue(new C.RemoveItem { Grid = MirGridType.Inventory, UniqueID = Item.UniqueID, To = itemCell.ItemSlot });
+                }
 
                 Locked = true;
 
@@ -680,7 +704,7 @@ namespace Client.MirControls
                             #endregion
                             #region From Equipment
                             case MirGridType.Equipment: //From Equipment
-                                if (Item != null && GameScene.SelectedCell.Item.Info.Type == ItemType.Amulet)
+                                if (Item != null && GameScene.SelectedCell.Item.Info.Type == ItemType.护身符)
                                 {
                                     if (GameScene.SelectedCell.Item.Info == Item.Info && Item.Count < Item.Info.StackSize)
                                     {
@@ -724,7 +748,7 @@ namespace Client.MirControls
                             #endregion
                             #region From Storage
                             case MirGridType.Storage: //From Storage
-                                if (Item != null && GameScene.SelectedCell.Item.Info.Type == ItemType.Amulet)
+                                if (Item != null && GameScene.SelectedCell.Item.Info.Type == ItemType.护身符)
                                 {
                                     if (GameScene.SelectedCell.Item.Info == Item.Info && Item.Count < Item.Info.StackSize)
                                     {
@@ -802,7 +826,7 @@ namespace Client.MirControls
                             #endregion
                             #region From Trade
                             case MirGridType.Trade: //From Trade
-                                if (Item != null && GameScene.SelectedCell.Item.Info.Type == ItemType.Amulet)
+                                if (Item != null && GameScene.SelectedCell.Item.Info.Type == ItemType.护身符)
                                 {
                                     if (GameScene.SelectedCell.Item.Info == Item.Info && Item.Count < Item.Info.StackSize)
                                     {
@@ -865,11 +889,76 @@ namespace Client.MirControls
                                 Network.Enqueue(new C.MoveItem { Grid = GridType, From = NPCAwakeDialog.ItemsIdx[GameScene.SelectedCell.ItemSlot], To = NPCAwakeDialog.ItemsIdx[GameScene.SelectedCell.ItemSlot] });
                                 GameScene.SelectedCell.Locked = false;
                                 GameScene.SelectedCell.Item = null;
+                                NPCAwakeDialog.ItemsIdx[GameScene.SelectedCell.ItemSlot] = 0;
+
                                 if (GameScene.SelectedCell.ItemSlot == 0)
                                     GameScene.Scene.NPCAwakeDialog.ItemCell_Click();
                                 GameScene.SelectedCell = null;
                                 break;
+                             #endregion
+
+                            #region From Refine
+                            case MirGridType.Refine: //From AwakenItem
+                                if (Item != null && GameScene.SelectedCell.Item.Info.Type == ItemType.护身符)
+                                {
+                                    if (GameScene.SelectedCell.Item.Info == Item.Info && Item.Count < Item.Info.StackSize)
+                                    {
+                                        Network.Enqueue(new C.MergeItem { GridFrom = GameScene.SelectedCell.GridType, GridTo = GridType, IDFrom = GameScene.SelectedCell.Item.UniqueID, IDTo = Item.UniqueID });
+
+                                        Locked = true;
+                                        GameScene.SelectedCell.Locked = true;
+                                        GameScene.SelectedCell = null;
+                                        return;
+                                    }
+                                }
+
+                                if (GameScene.SelectedCell.Item.Weight + MapObject.User.CurrentBagWeight > MapObject.User.MaxBagWeight)
+                                {
+                                    GameScene.Scene.ChatDialog.ReceiveChat("Too heavy to get back.", ChatType.System);
+                                    GameScene.SelectedCell = null;
+                                    return;
+                                }
+
+                                if (Item != null)
+                                {
+                                    if (GameScene.SelectedCell.Item.Info == Item.Info && Item.Count < Item.Info.StackSize)
+                                    {
+                                        Network.Enqueue(new C.MergeItem { GridFrom = GameScene.SelectedCell.GridType, GridTo = GridType, IDFrom = GameScene.SelectedCell.Item.UniqueID, IDTo = Item.UniqueID });
+
+                                        Locked = true;
+                                        GameScene.SelectedCell.Locked = true;
+                                        GameScene.SelectedCell = null;
+                                        return;
+                                    }
+                                }
+
+
+                                if (Item == null)
+                                {
+                                    Network.Enqueue(new C.RetrieveRefineItem { From = GameScene.SelectedCell.ItemSlot, To = ItemSlot });
+
+                                    Locked = true;
+                                    GameScene.SelectedCell.Locked = true;
+                                    GameScene.SelectedCell = null;
+                                    return;
+                                }
+
+                                for (int x = 6; x < ItemArray.Length; x++)
+                                    if (ItemArray[x] == null)
+                                    {
+                                        Network.Enqueue(new C.RetrieveRefineItem { From = GameScene.SelectedCell.ItemSlot, To = x });
+
+                                        MirItemCell temp = x < GameScene.User.BeltIdx ? GameScene.Scene.BeltDialog.Grid[x] : GameScene.Scene.InventoryDialog.Grid[x - GameScene.User.BeltIdx];
+
+                                        if (temp != null) temp.Locked = true;
+                                        GameScene.SelectedCell.Locked = true;
+                                        GameScene.SelectedCell = null;
+                                        return;
+                                    }
+                                break;
                             #endregion
+
+
                         }
                         break;
                     #endregion
@@ -879,7 +968,7 @@ namespace Client.MirControls
                         if (GameScene.SelectedCell.GridType != MirGridType.Inventory && GameScene.SelectedCell.GridType != MirGridType.Storage) return;
 
 
-                        if (Item != null && GameScene.SelectedCell.Item.Info.Type == ItemType.Amulet)
+                        if (Item != null && GameScene.SelectedCell.Item.Info.Type == ItemType.护身符)
                         {
                             if (GameScene.SelectedCell.Item.Info == Item.Info && Item.Count < Item.Info.StackSize)
                             {
@@ -1020,26 +1109,56 @@ namespace Client.MirControls
                     #endregion
                     #region To guild storage
                     case MirGridType.GuildStorage: //To Guild Storage
-                        if (GameScene.SelectedCell.GridType == MirGridType.Inventory)
+                        switch (GameScene.SelectedCell.GridType)
                         {
-                            if (Item != null)
-                            {
-                                GameScene.Scene.ChatDialog.ReceiveChat("You cannot swap items.", ChatType.System);
+                            case MirGridType.GuildStorage: //From Guild Storage
+                                if (GameScene.SelectedCell.GridType == MirGridType.GuildStorage)
+                                {
+                                    //if (Item != null)
+                                    //{
+                                        //GameScene.Scene.ChatDialog.ReceiveChat("You cannot swap items.", ChatType.System);
+                                        //return;
+                                    //}
+                                    if (!GuildDialog.MyOptions.HasFlag(RankOptions.CanStoreItem))
+                                    {
+                                        GameScene.Scene.ChatDialog.ReceiveChat("Insufficient rights to store items.", ChatType.System);
+                                        return;
+                                    }
+                                    //if (ItemArray[ItemSlot] == null)
+                                    //{
+                                        Network.Enqueue(new C.GuildStorageItemChange { Type = 3, From = GameScene.SelectedCell.ItemSlot, To = ItemSlot });
+                                        Locked = true;
+                                        GameScene.SelectedCell.Locked = true;
+                                        GameScene.SelectedCell = null;
+                                        return;
+                                    //}
+                                }
                                 return;
-                            }
-                            if (!GuildDialog.MyOptions.HasFlag(RankOptions.CanStoreItem))
-                            {
-                                GameScene.Scene.ChatDialog.ReceiveChat("Insufficient rights to store items.", ChatType.System);
+
+                            case MirGridType.Inventory:
+
+                                if (GameScene.SelectedCell.GridType == MirGridType.Inventory)
+                                {
+                                    if (Item != null)
+                                    {
+                                        GameScene.Scene.ChatDialog.ReceiveChat("You cannot swap items.", ChatType.System);
+                                        return;
+                                    }
+                                    if (!GuildDialog.MyOptions.HasFlag(RankOptions.CanStoreItem))
+                                    {
+                                        GameScene.Scene.ChatDialog.ReceiveChat("Insufficient rights to store items.", ChatType.System);
+                                        return;
+                                    }
+                                    if (ItemArray[ItemSlot] == null)
+                                    {
+                                        Network.Enqueue(new C.GuildStorageItemChange { Type = 0, From = GameScene.SelectedCell.ItemSlot, To = ItemSlot });
+                                        Locked = true;
+                                        GameScene.SelectedCell.Locked = true;
+                                        GameScene.SelectedCell = null;
+                                        return;
+                                    }
+                                }
                                 return;
-                            }
-                            if (ItemArray[ItemSlot] == null)
-                            {
-                                Network.Enqueue(new C.GuildStorageItemChange {Type = 0, From = GameScene.SelectedCell.ItemSlot, To = ItemSlot });
-                                Locked = true;
-                                GameScene.SelectedCell.Locked = true;
-                                GameScene.SelectedCell = null;
-                                return;
-                            }
                         }
                         break;
                     #endregion
@@ -1116,6 +1235,64 @@ namespace Client.MirControls
                         break;
 
                     #endregion
+
+                    #region To Refine 
+                  
+                    case MirGridType.Refine:
+
+                        switch (GameScene.SelectedCell.GridType)
+                        {
+                            #region From Refine
+                            case MirGridType.Refine: //From Refine
+                                if (Item != null)
+                                {
+                                    if (GameScene.SelectedCell.Item.Info == Item.Info && Item.Count < Item.Info.StackSize)
+                                    {
+                                        //Merge.
+                                        Network.Enqueue(new C.MergeItem { GridFrom = GameScene.SelectedCell.GridType, GridTo = GridType, IDFrom = GameScene.SelectedCell.Item.UniqueID, IDTo = Item.UniqueID });
+
+                                        Locked = true;
+                                        GameScene.SelectedCell.Locked = true;
+                                        GameScene.SelectedCell = null;
+                                        return;
+                                    }
+                                }
+
+                                Network.Enqueue(new C.MoveItem { Grid = GridType, From = GameScene.SelectedCell.ItemSlot, To = ItemSlot });
+                                Locked = true;
+                                GameScene.SelectedCell.Locked = true;
+                                GameScene.SelectedCell = null;
+                                return;
+                            #endregion
+
+                            #region From Inventory
+                            case MirGridType.Inventory: //From Inventory
+                                if (Item != null)
+                                {
+                                    if (GameScene.SelectedCell.Item.Info == Item.Info && Item.Count < Item.Info.StackSize)
+                                    {
+                                        Network.Enqueue(new C.MergeItem { GridFrom = GameScene.SelectedCell.GridType, GridTo = GridType, IDFrom = GameScene.SelectedCell.Item.UniqueID, IDTo = Item.UniqueID });
+
+                                        Locked = true;
+                                        GameScene.SelectedCell.Locked = true;
+                                        GameScene.SelectedCell = null;
+                                        return;
+                                    }
+                                }
+
+                                Network.Enqueue(new C.DepositRefineItem { From = GameScene.SelectedCell.ItemSlot, To = ItemSlot });
+                                Locked = true;
+                                GameScene.SelectedCell.Locked = true;
+                                GameScene.SelectedCell = null;
+                                return;
+                            #endregion
+                        }
+                        break;
+
+                    #endregion
+
+
+
                     #region To Awakening
                     case MirGridType.AwakenItem:
                         {
@@ -1128,10 +1305,10 @@ namespace Client.MirControls
                                     //baseitem
                                 case 0:
                                     {
-                                        if ((GameScene.SelectedCell.Item.Info.Type == ItemType.Weapon ||
-                                            GameScene.SelectedCell.Item.Info.Type == ItemType.Helmet ||
-                                            GameScene.SelectedCell.Item.Info.Type == ItemType.Armour) &&
-                                            GameScene.SelectedCell.Item.Info.Grade != ItemGrade.None &&
+                                        if ((GameScene.SelectedCell.Item.Info.Type == ItemType.武器 ||
+                                            GameScene.SelectedCell.Item.Info.Type == ItemType.头盔 ||
+                                            GameScene.SelectedCell.Item.Info.Type == ItemType.护甲) &&
+                                            GameScene.SelectedCell.Item.Info.Grade != ItemGrade.无 &&
                                             _itemSlot == 0)
                                         {
                                             if (Item == null)
@@ -1169,8 +1346,8 @@ namespace Client.MirControls
                                         {
                                             case MirGridType.Inventory:
                                                 {
-                                                    if (GameScene.SelectedCell.Item.Info.Type == ItemType.Awakening &&
-                                                        GameScene.SelectedCell.Item.Info.Shape < 200)
+                                                    if (GameScene.SelectedCell.Item.Info.Type == ItemType.觉醒 &&
+                                                        GameScene.SelectedCell.Item.Info.Shape < 200 && NPCAwakeDialog.ItemsIdx[_itemSlot] == 0)
                                                     {
                                                         Item = GameScene.SelectedCell.Item;
                                                         GameScene.SelectedCell.Locked = true;
@@ -1213,7 +1390,7 @@ namespace Client.MirControls
                                     //AllCashItem Korea Server Not Implementation.
                                 case 5:
                                 case 6:
-                                    if (GameScene.SelectedCell.Item.Info.Type == ItemType.Awakening &&
+                                    if (GameScene.SelectedCell.Item.Info.Type == ItemType.觉醒 &&
                                             GameScene.SelectedCell.Item.Info.Shape == 200)
                                     {
                                         Item = GameScene.SelectedCell.Item;
@@ -1239,8 +1416,8 @@ namespace Client.MirControls
                                 //    messageBox.Show();
                                 //    break;
                                 case -2:
-                                    messageBox = new MirMessageBox("Cannot awaken this item.", MirMessageBoxButtons.OK);
-                                    messageBox.Show();
+                                    //messageBox = new MirMessageBox("Cannot awaken this item.", MirMessageBoxButtons.OK);
+                                    //messageBox.Show();
                                     break;
                             }
                         }
@@ -1253,6 +1430,12 @@ namespace Client.MirControls
                             if (Item != null)
                             {
                                 GameScene.Scene.ChatDialog.ReceiveChat("You cannot swap items.", ChatType.System);
+                                return;
+                            }
+
+                            if (GameScene.SelectedCell.Item.Info.Bind.HasFlag(BindMode.DontTrade))
+                            {
+                                GameScene.Scene.ChatDialog.ReceiveChat("You cannot mail this item.", ChatType.System);
                                 return;
                             }
 
@@ -1285,28 +1468,28 @@ namespace Client.MirControls
 
             switch (Item.Info.Type)
             {
-                case ItemType.Weapon:
+                case ItemType.武器:
                     SoundManager.PlaySound(SoundList.ClickWeapon);
                     break;
-                case ItemType.Armour:
+                case ItemType.护甲:
                     SoundManager.PlaySound(SoundList.ClickArmour);
                     break;
-                case ItemType.Helmet:
+                case ItemType.头盔:
                     SoundManager.PlaySound(SoundList.ClickHelmet);
                     break;
-                case ItemType.Necklace:
+                case ItemType.项链:
                     SoundManager.PlaySound(SoundList.ClickNecklace);
                     break;
-                case ItemType.Bracelet:
+                case ItemType.手镯:
                     SoundManager.PlaySound(SoundList.ClickBracelet);
                     break;
-                case ItemType.Ring:
+                case ItemType.戒指:
                     SoundManager.PlaySound(SoundList.ClickRing);
                     break;
-                case ItemType.Boots:
+                case ItemType.鞋:
                     SoundManager.PlaySound(SoundList.ClickBoots);
                     break;
-                case ItemType.Potion:
+                case ItemType.药剂:
                     SoundManager.PlaySound(SoundList.ClickDrug);
                     break;
                 default:
@@ -1328,7 +1511,7 @@ namespace Client.MirControls
 
         private bool CanRemoveItem(UserItem i)
         {
-            if(MapObject.User.RidingMount && i.Info.Type != ItemType.Torch)
+            if(MapObject.User.RidingMount && i.Info.Type != ItemType.火把)
             {
                 return false;
             }
@@ -1343,32 +1526,32 @@ namespace Client.MirControls
             switch ((EquipmentSlot)ItemSlot)
             {
                 case EquipmentSlot.Weapon:
-                    return type == ItemType.Weapon;
+                    return type == ItemType.武器;
                 case EquipmentSlot.Armour:
-                    return type == ItemType.Armour;
+                    return type == ItemType.护甲;
                 case EquipmentSlot.Helmet:
-                    return type == ItemType.Helmet;
+                    return type == ItemType.头盔;
                 case EquipmentSlot.Torch:
-                    return type == ItemType.Torch;
+                    return type == ItemType.火把;
                 case EquipmentSlot.Necklace:
-                    return type == ItemType.Necklace;
+                    return type == ItemType.项链;
                 case EquipmentSlot.BraceletL:
-                    return i.Info.Type == ItemType.Bracelet;
+                    return i.Info.Type == ItemType.手镯;
                 case EquipmentSlot.BraceletR:
-                    return i.Info.Type == ItemType.Bracelet || i.Info.Type == ItemType.Amulet;
+                    return i.Info.Type == ItemType.手镯 || i.Info.Type == ItemType.护身符;
                 case EquipmentSlot.RingL:
                 case EquipmentSlot.RingR:
-                    return type == ItemType.Ring;
+                    return type == ItemType.戒指;
                 case EquipmentSlot.Amulet:
-                    return type == ItemType.Amulet;// && i.Info.Shape > 0;
+                    return type == ItemType.护身符;// && i.Info.Shape > 0;
                 case EquipmentSlot.Boots:
-                    return type == ItemType.Boots;
+                    return type == ItemType.鞋;
                 case EquipmentSlot.Belt:
-                    return type == ItemType.Belt;
+                    return type == ItemType.腰带;
                 case EquipmentSlot.Stone:
-                    return type == ItemType.Stone;
+                    return type == ItemType.守护石;
                 case EquipmentSlot.Mount:
-                    return type == ItemType.Mount;
+                    return type == ItemType.坐骑;
                 default:
                     return false;
             }
@@ -1399,35 +1582,35 @@ namespace Client.MirControls
             switch (MapObject.User.Class)
             {
                 case MirClass.Warrior:
-                    if (!Item.Info.RequiredClass.HasFlag(RequiredClass.Warrior))
+                    if (!Item.Info.RequiredClass.HasFlag(RequiredClass.战士))
                     {
                         GameScene.Scene.ChatDialog.ReceiveChat("Warriors cannot use this item.", ChatType.System);
                         return false;
                     }
                     break;
                 case MirClass.Wizard:
-                    if (!Item.Info.RequiredClass.HasFlag(RequiredClass.Wizard))
+                    if (!Item.Info.RequiredClass.HasFlag(RequiredClass.法师))
                     {
                         GameScene.Scene.ChatDialog.ReceiveChat("Wizards cannot use this item.", ChatType.System);
                         return false;
                     }
                     break;
                 case MirClass.Taoist:
-                    if (!Item.Info.RequiredClass.HasFlag(RequiredClass.Taoist))
+                    if (!Item.Info.RequiredClass.HasFlag(RequiredClass.道士))
                     {
                         GameScene.Scene.ChatDialog.ReceiveChat("Taoists cannot use this item.", ChatType.System);
                         return false;
                     }
                     break;
                 case MirClass.Assassin:
-                    if (!Item.Info.RequiredClass.HasFlag(RequiredClass.Assassin))
+                    if (!Item.Info.RequiredClass.HasFlag(RequiredClass.刺客))
                     {
                         GameScene.Scene.ChatDialog.ReceiveChat("Assassins cannot use this item.", ChatType.System);
                         return false;
                     }
                     break;
                 case MirClass.Archer:
-                    if (!Item.Info.RequiredClass.HasFlag(RequiredClass.Archer))
+                    if (!Item.Info.RequiredClass.HasFlag(RequiredClass.弓手))
                     {
                         GameScene.Scene.ChatDialog.ReceiveChat("Archers cannot use this item.", ChatType.System);
                         return false;
@@ -1483,10 +1666,10 @@ namespace Client.MirControls
 
             switch (Item.Info.Type)
             {
-                case ItemType.Saddle:
-                case ItemType.Ribbon:
-                case ItemType.Bells:
-                case ItemType.Mask:
+                case ItemType.马鞍:
+                case ItemType.色带:
+                case ItemType.铃铛:
+                case ItemType.面具:
                 case ItemType.Reins:
                     if (MapObject.User.Equipment[(int)EquipmentSlot.Mount] == null)
                     {
@@ -1494,9 +1677,9 @@ namespace Client.MirControls
                         return false;
                     }
                     break;
-                case ItemType.Hook:
+                case ItemType.鱼钩:
                 case ItemType.Float:
-                case ItemType.Bait:
+                case ItemType.饵:
                 case ItemType.Finder:
                 case ItemType.Reel:
                     if (MapObject.User.Equipment[(int)EquipmentSlot.Weapon] == null || 
@@ -1537,35 +1720,35 @@ namespace Client.MirControls
             switch (MapObject.User.Class)
             {
                 case MirClass.Warrior:
-                    if (!i.Info.RequiredClass.HasFlag(RequiredClass.Warrior))
+                    if (!i.Info.RequiredClass.HasFlag(RequiredClass.战士))
                     {
                         GameScene.Scene.ChatDialog.ReceiveChat("Warriors cannot use this item.", ChatType.System);
                         return false;
                     }
                     break;
                 case MirClass.Wizard:
-                    if (!i.Info.RequiredClass.HasFlag(RequiredClass.Wizard))
+                    if (!i.Info.RequiredClass.HasFlag(RequiredClass.法师))
                     {
                         GameScene.Scene.ChatDialog.ReceiveChat("Wizards cannot use this item.", ChatType.System);
                         return false;
                     }
                     break;
                 case MirClass.Taoist:
-                    if (!i.Info.RequiredClass.HasFlag(RequiredClass.Taoist))
+                    if (!i.Info.RequiredClass.HasFlag(RequiredClass.道士))
                     {
                         GameScene.Scene.ChatDialog.ReceiveChat("Taoists cannot use this item.", ChatType.System);
                         return false;
                     }
                     break;
                 case MirClass.Assassin:
-                    if (!i.Info.RequiredClass.HasFlag(RequiredClass.Assassin))
+                    if (!i.Info.RequiredClass.HasFlag(RequiredClass.刺客))
                     {
                         GameScene.Scene.ChatDialog.ReceiveChat("Assassins cannot use this item.", ChatType.System);
                         return false;
                     }
                     break;
                 case MirClass.Archer:
-                    if (!i.Info.RequiredClass.HasFlag(RequiredClass.Archer))
+                    if (!i.Info.RequiredClass.HasFlag(RequiredClass.弓手))
                     {
                         GameScene.Scene.ChatDialog.ReceiveChat("Archers cannot use this item.", ChatType.System);
                         return false;
@@ -1619,7 +1802,7 @@ namespace Client.MirControls
                     break;
             }
 
-            if (i.Info.Type == ItemType.Weapon || i.Info.Type == ItemType.Torch)
+            if (i.Info.Type == ItemType.武器 || i.Info.Type == ItemType.火把)
             {
                 if (i.Weight - (Item != null ? Item.Weight : 0) + MapObject.User.CurrentHandWeight > MapObject.User.MaxHandWeight)
                 {

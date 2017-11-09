@@ -377,6 +377,8 @@ namespace Client.MirObjects
 
             DrawLocation = new Point((Movement.X - User.Movement.X + MapControl.OffSetX) * MapControl.CellWidth, (Movement.Y - User.Movement.Y + MapControl.OffSetY) * MapControl.CellHeight);
             DrawLocation.Offset(User.OffSetMove);
+            DrawLocation.Offset(GlobalDisplayLocationOffset);
+
             if (BodyLibrary != null)
                 FinalDrawLocation = DrawLocation.Add(BodyLibrary.GetOffSet(DrawFrame));
 
@@ -415,6 +417,7 @@ namespace Client.MirObjects
                     DrawColour = Color.Blue;
                     break;
                 case PoisonType.Paralysis:
+                case PoisonType.LRParalysis:
                     DrawColour = Color.Gray;
                     break;
             }
@@ -562,12 +565,13 @@ namespace Client.MirObjects
             return MapControl.MapLocation == CurrentLocation || BodyLibrary != null && BodyLibrary.VisiblePixel(DrawFrame, p.Subtract(FinalDrawLocation), false);
         }
 
-        public override void DrawBehindEffects()
+        public override void DrawBehindEffects(bool effectsEnabled)
         {
         }
 
-        public override void DrawEffects()
+        public override void DrawEffects(bool effectsEnabled)
         {
+            if (!effectsEnabled) return;
 
             if (BodyLibrary == null) return;
 
@@ -680,28 +684,28 @@ namespace Client.MirObjects
             if (quest.MinLevelNeeded > User.Level || quest.MaxLevelNeeded < User.Level)
                 return false;
 
-            if (!quest.ClassNeeded.HasFlag(RequiredClass.None))
+            if (!quest.ClassNeeded.HasFlag(RequiredClass.无))
             {
                 switch (User.Class)
                 {
                     case MirClass.Warrior:
-                        if (!quest.ClassNeeded.HasFlag(RequiredClass.Warrior))
+                        if (!quest.ClassNeeded.HasFlag(RequiredClass.战士))
                             return false;
                         break;
                     case MirClass.Wizard:
-                        if (!quest.ClassNeeded.HasFlag(RequiredClass.Wizard))
+                        if (!quest.ClassNeeded.HasFlag(RequiredClass.法师))
                             return false;
                         break;
                     case MirClass.Taoist:
-                        if (!quest.ClassNeeded.HasFlag(RequiredClass.Taoist))
+                        if (!quest.ClassNeeded.HasFlag(RequiredClass.道士))
                             return false;
                         break;
                     case MirClass.Assassin:
-                        if (!quest.ClassNeeded.HasFlag(RequiredClass.Assassin))
+                        if (!quest.ClassNeeded.HasFlag(RequiredClass.刺客))
                             return false;
                         break;
                     case MirClass.Archer:
-                        if (!quest.ClassNeeded.HasFlag(RequiredClass.Archer))
+                        if (!quest.ClassNeeded.HasFlag(RequiredClass.弓手))
                             return false;
                         break;
                 }

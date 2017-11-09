@@ -29,7 +29,7 @@ namespace Client.MirScenes
 
         private InputKeyDialog _ViewKey;
 
-        public MirImageControl ViolenceLabel, MinorLabel, YouthLabel; 
+        public MirImageControl TestLabel, ViolenceLabel, MinorLabel, YouthLabel; 
 
         public LoginScene()
         {
@@ -79,9 +79,17 @@ namespace Client.MirScenes
                     BorderColour = Color.Black,
                     Location = new Point(5, 580),
                     Parent = _background,
-                    Text = string.Format("Version: {0}", Application.ProductVersion),
+                    Text = string.Format("版本: {0}", Application.ProductVersion),
                 };
 
+            TestLabel = new MirImageControl
+            {
+                Index = 79,
+                Library = Libraries.Prguse,
+                Parent = this,
+                Location = new Point(Settings.ScreenWidth - 116, 10),
+                Visible = Settings.UseTestConfig
+            };
 
             //ViolenceLabel = new MirImageControl
             //{
@@ -107,7 +115,7 @@ namespace Client.MirScenes
             //    Location = new Point(684, 10)
             //};
 
-            _connectBox = new MirMessageBox("Attempting to connect to the server.", MirMessageBoxButtons.Cancel);
+            _connectBox = new MirMessageBox("正在尝试连接到服务器.", MirMessageBoxButtons.Cancel);
             _connectBox.CancelButton.Click += (o, e) => Program.Form.Close();
             Shown += (sender, args) =>
                 {
@@ -119,7 +127,7 @@ namespace Client.MirScenes
         public override void Process()
         {
             if (!Network.Connected && _connectBox.Label != null)
-                _connectBox.Label.Text = string.Format("Attempting to connect to the server.\nAttempt:{0}", Network.ConnectAttempt);
+                _connectBox.Label.Text = string.Format("正在尝试连接到服务器.\n尝试次数:{0}", Network.ConnectAttempt);
         }
         public override void ProcessPacket(Packet p)
         {
@@ -158,7 +166,7 @@ namespace Client.MirScenes
 
         private  void SendVersion()
         {
-            _connectBox.Label.Text = "Sending Client Version.";
+            _connectBox.Label.Text = "正在发送客户端版本.";
 
             C.ClientVersion p = new C.ClientVersion();
             try
@@ -169,7 +177,7 @@ namespace Client.MirScenes
                     sum = md5.ComputeHash(stream);
 
                 p.VersionHash = sum;
-                Network.Enqueue(p);
+                    Network.Enqueue(p);
             }
             catch (Exception ex)
             {
@@ -181,7 +189,7 @@ namespace Client.MirScenes
             switch (p.Result)
             {
                 case 0:
-                    MirMessageBox.Show("Wrong version, please update your game.\nGame will now Close", true);
+                    MirMessageBox.Show("版本错误，请更新你的客户端.\n游戏即将关闭", true);
 
                     Network.Disconnect();
                     break;
@@ -197,40 +205,40 @@ namespace Client.MirScenes
             switch (p.Result)
             {
                 case 0:
-                    MirMessageBox.Show("Account creation is currently disabled.");
+                    MirMessageBox.Show("注册功能被关闭.");
                     _account.Dispose();
                     break;
                 case 1:
-                    MirMessageBox.Show("Your AccountID is not acceptable.");
+                    MirMessageBox.Show("你的用户名不能被接受.");
                     _account.AccountIDTextBox.SetFocus();
                     break;
                 case 2:
-                    MirMessageBox.Show("Your Password is not acceptable.");
+                    MirMessageBox.Show("你的密码不能被接受.");
                     _account.Password1TextBox.SetFocus();
                     break;
                 case 3:
-                    MirMessageBox.Show("Your E-Mail Address is not acceptable.");
+                    MirMessageBox.Show("你的Email不能被接受.");
                     _account.EMailTextBox.SetFocus();
                     break;
                 case 4:
-                    MirMessageBox.Show("Your User Name is not acceptable.");
+                    MirMessageBox.Show("你的名字不能被接受..");
                     _account.UserNameTextBox.SetFocus();
                     break;
                 case 5:
-                    MirMessageBox.Show("Your Secret Question is not acceptable.");
+                    MirMessageBox.Show("你的问题不能被接受.");
                     _account.QuestionTextBox.SetFocus();
                     break;
                 case 6:
-                    MirMessageBox.Show("Your Secret Answer is not acceptable.");
+                    MirMessageBox.Show("你的回答不能被接受.");
                     _account.AnswerTextBox.SetFocus();
                     break;
                 case 7:
-                    MirMessageBox.Show("An Account with this ID already exists.");
+                    MirMessageBox.Show("用户名已经被使用.");
                     _account.AccountIDTextBox.Text = string.Empty;
                     _account.AccountIDTextBox.SetFocus();
                     break;
                 case 8:
-                    MirMessageBox.Show("Your account was created successfully.");
+                    MirMessageBox.Show("账号注册成功.");
                     _account.Dispose();
                     break;
             }
@@ -242,32 +250,32 @@ namespace Client.MirScenes
             switch (p.Result)
             {
                 case 0:
-                    MirMessageBox.Show("Password Changing is currently disabled.");
+                    MirMessageBox.Show("修改密码被禁用.");
                     _password.Dispose();
                     break;
                 case 1:
-                    MirMessageBox.Show("Your AccountID is not acceptable.");
+                    MirMessageBox.Show("你的用户名不能被接受.");
                     _password.AccountIDTextBox.SetFocus();
                     break;
                 case 2:
-                    MirMessageBox.Show("The current Password is not acceptable.");
+                    MirMessageBox.Show("当前密码不正确.");
                     _password.CurrentPasswordTextBox.SetFocus();
                     break;
                 case 3:
-                    MirMessageBox.Show("Your new Password is not acceptable.");
+                    MirMessageBox.Show("你的新密码不能被接受.");
                     _password.NewPassword1TextBox.SetFocus();
                     break;
                 case 4:
-                    MirMessageBox.Show("The AccountID does not exist.");
+                    MirMessageBox.Show("用户名不存在.");
                     _password.AccountIDTextBox.SetFocus();
                     break;
                 case 5:
-                    MirMessageBox.Show("Incorrect Password and AccountID combination.");
+                    MirMessageBox.Show("用户名密码不匹配");
                     _password.CurrentPasswordTextBox.SetFocus();
                     _password.CurrentPasswordTextBox.Text = string.Empty;
                     break;
                 case 6:
-                    MirMessageBox.Show("Your password was changed successfully.");
+                    MirMessageBox.Show("密码修改成功.");
                     _password.Dispose();
                     break;
             }
@@ -277,7 +285,7 @@ namespace Client.MirScenes
             _password.Dispose();
 
             TimeSpan d = p.ExpiryDate - CMain.Now;
-            MirMessageBox.Show(string.Format("This account is banned.\n\nReason: {0}\nExpiryDate: {1}\nDuration: {2:#,##0} Hours, {3} Minutes, {4} Seconds", p.Reason,
+            MirMessageBox.Show(string.Format("账户被禁用.\n\n原因: {0}\n到期时间: {1}\n还有: {2:#,##0} 小时, {3} 分钟, {4} 秒", p.Reason,
                                              p.ExpiryDate, Math.Floor(d.TotalHours), d.Minutes, d.Seconds ));
         }
         private void Login(S.Login p)
@@ -286,23 +294,23 @@ namespace Client.MirScenes
             switch (p.Result)
             {
                 case 0:
-                    MirMessageBox.Show("Logging in is currently disabled.");
+                    MirMessageBox.Show("登录游戏被禁用.");
                     _login.Clear();
                     break;
                 case 1:
-                    MirMessageBox.Show("Your AccountID is not acceptable.");
+                    MirMessageBox.Show("你的用户名不能被接受.");
                     _login.AccountIDTextBox.SetFocus();
                     break;
                 case 2:
-                    MirMessageBox.Show("Your Password is not acceptable.");
+                    MirMessageBox.Show("你的密码不能被接受.");
                     _login.PasswordTextBox.SetFocus();
                     break;
                 case 3:
-                    MirMessageBox.Show("The AccountID does not exist.");
+                    MirMessageBox.Show("用户名不存在.");
                     _login.PasswordTextBox.SetFocus();
                     break;
                 case 4:
-                    MirMessageBox.Show("Incorrect Password and AccountID combination.");
+                    MirMessageBox.Show("用户名密码不匹配.");
                     _login.PasswordTextBox.Text = string.Empty;
                     _login.PasswordTextBox.SetFocus();
                     break;
@@ -313,7 +321,7 @@ namespace Client.MirScenes
             _login.OKButton.Enabled = true;
 
             TimeSpan d = p.ExpiryDate - CMain.Now;
-            MirMessageBox.Show(string.Format("This account is banned.\n\nReason: {0}\nExpiryDate: {1}\nDuration: {2:#,##0} Hours, {3} Minutes, {4} Seconds", p.Reason,
+            MirMessageBox.Show(string.Format("账户被禁用.\n\n原因: {0}\n到期时间: {1}\n还有: {2:#,##0} 小时, {3} 分钟, {4} 秒", p.Reason,
                                              p.ExpiryDate, Math.Floor(d.TotalHours), d.Minutes, d.Seconds));
         }
         private void Login(S.LoginSuccess p)
@@ -343,6 +351,8 @@ namespace Client.MirScenes
                 Index = 1084;
                 Library = Libraries.Prguse;
                 Location = new Point((Settings.ScreenWidth - Size.Width)/2, (Settings.ScreenHeight - Size.Height)/2);
+                PixelDetect = false;
+                Size = new Size(328, 220);
 
                 TitleLabel = new MirImageControl
                     {
@@ -350,14 +360,14 @@ namespace Client.MirScenes
                         Library = Libraries.Title,
                         Parent = this,
                     };
-                TitleLabel.Location = new Point((Size.Width - TitleLabel.Size.Width)/2, 5);
+                TitleLabel.Location = new Point((Size.Width - TitleLabel.Size.Width)/2, 12);
 
                 AccountIDLabel = new MirImageControl
                     {
                         Index = 31,
                         Library = Libraries.Title,
                         Parent = this,
-                        Location = new Point(51, 82),
+                        Location = new Point(52, 83),
                     };
 
                 PassLabel = new MirImageControl
@@ -365,16 +375,17 @@ namespace Client.MirScenes
                         Index = 32,
                         Library = Libraries.Title,
                         Parent = this,
-                        Location = new Point(46, 109)
+                        Location = new Point(43, 105)
                     };
 
                 OKButton = new MirButton
                     {
                         Enabled = false,
+                        Size = new Size(42,42),
                         HoverIndex = 321,
                         Index = 320,
                         Library = Libraries.Title,
-                        Location = new Point(227, 83),
+                        Location = new Point(227, 81),
                         Parent = this,
                         PressedIndex = 322
                     };
@@ -425,9 +436,9 @@ namespace Client.MirScenes
                     {
                         Location = new Point(85, 85),
                         Parent = this,
-                        Size = new Size(136, 15),
+                        Size = new Size(136, 12),
                         MaxLength = Globals.MaxAccountIDLength
-                    };
+                };
                 AccountIDTextBox.SetFocus();
                 AccountIDTextBox.TextBox.TextChanged += AccountIDTextBox_TextChanged;
                 AccountIDTextBox.TextBox.KeyPress += TextBox_KeyPress;
@@ -530,6 +541,11 @@ namespace Client.MirScenes
                 if (Visible) return;
                 Visible = true;
                 AccountIDTextBox.SetFocus();
+
+                if (Settings.Password != string.Empty && Settings.AccountID != string.Empty)
+                {
+                    Login();
+                }
             }
             public void Clear()
             {
@@ -583,35 +599,41 @@ namespace Client.MirScenes
 
                 KeyEscButton = new MirButton
                 {
+                    Text = "Esc",
                     HoverIndex = 301,
                     Index = 300,
                     Library = Libraries.Title,
                     Location = new Point(12, 12),
                     Parent = this,
-                    PressedIndex = 302
+                    PressedIndex = 302,
+                    CenterText = true
                 };
                 KeyEscButton.Click += (o, e) => Dispose();
 
                 KeyDelButton = new MirButton
                 {
+                    Text = "Delete",
                     HoverIndex = 304,
                     Index = 303,
                     Library = Libraries.Title,
                     Location = new Point(140, 76),
                     Parent = this,
-                    PressedIndex = 305
+                    PressedIndex = 305,
+                    CenterText = true
                 };
                 KeyDelButton.Click += (o, e) => SecureKeyDelete();
 
                 KeyEnterButton = new MirButton
                 {
+                    Text = "Enter",
                     HoverIndex = 307,
                     Index = 306,
                     Library = Libraries.Title,
                     Location = new Point(140, 236),
                     Parent = this,
-                    PressedIndex = 308
-                   
+                    PressedIndex = 308,
+                    CenterText = true
+
                 };
                 KeyEnterButton.Click += (o, e) =>
                 {
@@ -622,12 +644,14 @@ namespace Client.MirScenes
 
                 KeyRandButton = new MirButton
                 {
+                    Text = "Random",
                     HoverIndex = 310,
                     Index = 309,
                     Library = Libraries.Title,
                     Location = new Point(76, 236),
                     Parent = this,
-                    PressedIndex = 311
+                    PressedIndex = 311,
+                    CenterText = true
                 };
                 KeyRandButton.Click += (o, e) =>
                 {
@@ -806,7 +830,7 @@ namespace Client.MirScenes
                 {
                     Border = true,
                     BorderColour = Color.Gray,
-                    Location = new Point(226, 104),
+                    Location = new Point(226, 103),
                     MaxLength = Globals.MaxAccountIDLength,
                     Parent = this,
                     Size = new Size(136, 18),
@@ -820,7 +844,7 @@ namespace Client.MirScenes
                 {
                     Border = true,
                     BorderColour = Color.Gray,
-                    Location = new Point(226, 130),
+                    Location = new Point(226, 129),
                     MaxLength = Globals.MaxPasswordLength,
                     Parent = this,
                     Password = true,
@@ -834,7 +858,7 @@ namespace Client.MirScenes
                 {
                     Border = true,
                     BorderColour = Color.Gray,
-                    Location = new Point(226, 156),
+                    Location = new Point(226, 155),
                     MaxLength = Globals.MaxPasswordLength,
                     Parent = this,
                     Password = true,
@@ -848,7 +872,7 @@ namespace Client.MirScenes
                 {
                     Border = true,
                     BorderColour = Color.Gray,
-                    Location = new Point(226, 190),
+                    Location = new Point(226, 189),
                     MaxLength = 20,
                     Parent = this,
                     Size = new Size(136, 18),
@@ -862,7 +886,7 @@ namespace Client.MirScenes
                 {
                     Border = true,
                     BorderColour = Color.Gray,
-                    Location = new Point(226, 216),
+                    Location = new Point(226, 215),
                     MaxLength = 10,
                     Parent = this,
                     Size = new Size(136, 18),
@@ -875,7 +899,7 @@ namespace Client.MirScenes
                 {
                     Border = true,
                     BorderColour = Color.Gray,
-                    Location = new Point(226, 251),
+                    Location = new Point(226, 250),
                     MaxLength = 30,
                     Parent = this,
                     Size = new Size(190, 18),
@@ -888,7 +912,7 @@ namespace Client.MirScenes
                 {
                     Border = true,
                     BorderColour = Color.Gray,
-                    Location = new Point(226, 277),
+                    Location = new Point(226, 276),
                     MaxLength = 30,
                     Parent = this,
                     Size = new Size(190, 18),
@@ -901,7 +925,7 @@ namespace Client.MirScenes
                 {
                     Border = true,
                     BorderColour = Color.Gray,
-                    Location = new Point(226, 312),
+                    Location = new Point(226, 311),
                     MaxLength = 50,
                     Parent = this,
                     Size = new Size(136, 18),
@@ -1074,45 +1098,45 @@ namespace Client.MirScenes
             private void AccountIDTextBox_GotFocus(object sender, EventArgs e)
             {
                 Description.Visible = true;
-                Description.Text = " Description: Account ID.\n Accepted characters: a-z A-Z 0-9.\n Length: between " +
-                                   Globals.MinAccountIDLength + " and " + Globals.MaxAccountIDLength + " characters.";
+                Description.Text = " 说明: 用户名.\n 可用字符: a-z A-Z 0-9.\n 长度: " +
+                                   Globals.MinAccountIDLength + " - " + Globals.MaxAccountIDLength + " 字符.";
             }
             private void PasswordTextBox_GotFocus(object sender, EventArgs e)
             {
                 Description.Visible = true;
-                Description.Text = " Description: Password.\n Accepted characters: a-z A-Z 0-9.\n Length: between " +
-                                   Globals.MinPasswordLength + " and " + Globals.MaxPasswordLength + " characters.";
+                Description.Text = " 说明: 密码.\n 可用字符: a-z A-Z 0-9.\n 长度: " +
+                                   Globals.MinPasswordLength + " - " + Globals.MaxPasswordLength + " 字符.";
             }
             private void EMailTextBox_GotFocus(object sender, EventArgs e)
             {
                 Description.Visible = true;
                 Description.Text =
-                    " Description: E-Mail Address.\n Format: Example@Example.Com.\n Max Length: 50 characters.\n Optional Field.";
+                    " 说明: E-Mail .\n 格式: Example@Example.Com.\n 最大长度: 50 字符.";
             }
             private void UserNameTextBox_GotFocus(object sender, EventArgs e)
             {
                 Description.Visible = true;
                 Description.Text =
-                    " Description: User Name.\n Accepted characters:All.\n Length: between 0 and 20 characters.\n Optional Field.";
+                    " 说明: 名字.\n 长度: 0 - 20 字符.";
             }
             private void BirthDateTextBox_GotFocus(object sender, EventArgs e)
             {
                 Description.Visible = true;
                 Description.Text =
-                    string.Format(" Description: Birth Date.\n Format: {0}.\n Length: 10 characters.\n Optional Field.",
+                    string.Format(" 说明: 出生日期.\n Format: {0}.\n 长度: 10 字符.",
                                   Thread.CurrentThread.CurrentCulture.DateTimeFormat.ShortDatePattern.ToUpper());
             }
             private void QuestionTextBox_GotFocus(object sender, EventArgs e)
             {
                 Description.Visible = true;
                 Description.Text =
-                    " Description: Secret Question.\n Accepted characters: All.\n Length: between 0 and 30 characters.\n Optional Field.";
+                    " 说明: 问题.\n 长度: 0 - 30 字符.";
             }
             private void AnswerTextBox_GotFocus(object sender, EventArgs e)
             {
                 Description.Visible = true;
                 Description.Text =
-                    " Description: Secret Answer.\n Accepted characters: All.\n Length: between 0 and 30 characters.\n Optional Field.";
+                    " 说明: 答案.\n 长度: 0 - 30 字符.";
             }
 
             private void RefreshConfirmButton()
@@ -1220,7 +1244,7 @@ namespace Client.MirScenes
                 {
                     Border = true,
                     BorderColour = Color.Gray,
-                    Location = new Point(178, 76),
+                    Location = new Point(178, 75),
                     MaxLength = Globals.MaxAccountIDLength,
                     Parent = this,
                     Size = new Size(136, 18),
@@ -1233,7 +1257,7 @@ namespace Client.MirScenes
                 {
                     Border = true,
                     BorderColour = Color.Gray,
-                    Location = new Point(178, 114),
+                    Location = new Point(178, 113),
                     MaxLength = Globals.MaxPasswordLength,
                     Parent = this,
                     Password = true,
@@ -1246,7 +1270,7 @@ namespace Client.MirScenes
                 {
                     Border = true,
                     BorderColour = Color.Gray,
-                    Location = new Point(178, 152),
+                    Location = new Point(178, 151),
                     MaxLength = Globals.MaxPasswordLength,
                     Parent = this,
                     Password = true,
@@ -1259,7 +1283,7 @@ namespace Client.MirScenes
                 {
                     Border = true,
                     BorderColour = Color.Gray,
-                    Location = new Point(178, 189),
+                    Location = new Point(178, 188),
                     MaxLength = Globals.MaxPasswordLength,
                     Parent = this,
                     Password = true,

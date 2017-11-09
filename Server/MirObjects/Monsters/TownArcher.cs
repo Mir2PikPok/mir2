@@ -10,9 +10,10 @@ namespace Server.MirObjects.Monsters
         public long FearTime;
         public byte AttackRange = 10;
 
+
         protected override bool CanMove
         {
-            get { return false; }
+            get { return Route.Count > 0 && !Dead && Envir.Time > MoveTime && Envir.Time > ActionTime && Envir.Time > ShockTime; }
         }
 
         protected internal TownArcher(MonsterInfo info) : base(info) { }

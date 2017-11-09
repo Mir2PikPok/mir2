@@ -18,7 +18,7 @@ namespace Server.MirForms.VisualMapInfo.Control
             get { return SMain.EditEnvir; }
         }
 
-        public OvalShape RegionHighlight = new OvalShape();
+        public RectangleShape RegionHighlight = new RectangleShape();
 
         public int MonsterIndex;
 
@@ -50,9 +50,11 @@ namespace Server.MirForms.VisualMapInfo.Control
                 RegionHighlight.Top = (Y - value) * VisualizerGlobal.ZoomLevel;
 
 
-                Details.Text = string.Format("C               D            X: {0} | Y: {1} | Range: {2}", X.ToString(), Y.ToString(), Range.ToString());
+                Details.Text = string.Format("C               D            X: {0} | Y: {1} | 范围: {2}", X.ToString(), Y.ToString(), Range.ToString());
             }
         }
+
+        public string RoutePath = string.Empty;
 
         public RespawnEntry()
         {
@@ -200,7 +202,7 @@ namespace Server.MirForms.VisualMapInfo.Control
 
             MonsterComboBox.SelectedIndex = MonsterIndex-1; //-1
 
-            Details.Text = string.Format("C               D            X: {0} | Y: {1} | Range: {2}", X.ToString(), Y.ToString(), Range.ToString());
+            Details.Text = string.Format("C               D            X: {0} | Y: {1} | 范围: {2}", X.ToString(), Y.ToString(), Range.ToString());
         }
 
         private void MonsterComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -219,6 +221,7 @@ namespace Server.MirForms.VisualMapInfo.Control
             RespawnDetail.Spread.Text = Range.ToString();
             RespawnDetail.Count.Text = Count.Text;
             RespawnDetail.Delay.Text = Delay.Text;
+            RespawnDetail.RoutePath.Text = RoutePath;
 
             RespawnDetail.ShowDialog();
 
@@ -227,6 +230,7 @@ namespace Server.MirForms.VisualMapInfo.Control
             Range = Convert.ToUInt16(RespawnDetail.Spread.Text);
             Count.Text = RespawnDetail.Count.Text;
             Delay.Text = RespawnDetail.Delay.Text;
+            RoutePath = RespawnDetail.RoutePath.Text;
 
             RespawnDetail.Dispose();
         }

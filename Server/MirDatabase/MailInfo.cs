@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Server.MirEnvir
+namespace Server.MirDatabase
 {
     public class MailInfo
     {
@@ -52,7 +52,7 @@ namespace Server.MirEnvir
             CanReply = canReply;
         }
 
-        public MailInfo(BinaryReader reader)
+        public MailInfo(BinaryReader reader, int version, int customversion)
         {
             MailID = reader.ReadUInt64();
             Sender = reader.ReadString();
@@ -64,7 +64,7 @@ namespace Server.MirEnvir
 
             for (int i = 0; i < count; i++)
             {
-                UserItem item = new UserItem(reader);
+                UserItem item = new UserItem(reader, version, customversion);
                 if (SMain.Envir.BindItem(item))
                     Items.Add(item);
             }

@@ -19,7 +19,7 @@ namespace Server.MirObjects
         public override int CurrentMapIndex { get; set; }
         public override Point CurrentLocation { get; set; }
         public override MirDirection Direction { get; set; }
-        public override byte Level { get; set; }
+        public override ushort Level { get; set; }
         public override bool Blocking
         {
             get
@@ -142,7 +142,7 @@ namespace Server.MirObjects
             };
         }
 
-        public override void ApplyPoison(Poison p, MapObject Caster = null, bool NoResist = false)
+        public override void ApplyPoison(Poison p, MapObject Caster = null, bool NoResist = false, bool ignoreDefence = true)
         {
             throw new NotSupportedException();
         }

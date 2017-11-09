@@ -52,7 +52,7 @@ namespace Server
 
         public void RefreshUniqueTab()
         {
-            if ((ITypeComboBox.SelectedItem != null) && ((ItemType)ITypeComboBox.SelectedItem == ItemType.Gem))
+            if ((ITypeComboBox.SelectedItem != null) && ((ItemType)ITypeComboBox.SelectedItem == ItemType.宝玉))
             {
                 tabControl1.TabPages[3].Text = "Usable on";
                 ParalysischeckBox.Text = "Weapon";
@@ -286,12 +286,15 @@ namespace Server
             Bind_destroyondropcheckbox.Checked = info.Bind.HasFlag(BindMode.DestroyOnDrop);
             Bind_dontdeathdropcheckbox.Checked = info.Bind.HasFlag(BindMode.DontDeathdrop);
             Bind_dontdropcheckbox.Checked = info.Bind.HasFlag(BindMode.DontDrop);
-            Bind_DontSpecialRepaircheckBox.Checked = info.BindNoSRepair;
+            Bind_DontSpecialRepaircheckBox.Checked = info.Bind.HasFlag(BindMode.NoSRepair);
+            BindOnEquipcheckbox.Checked = info.Bind.HasFlag(BindMode.BindOnEquip);
+            BreakOnDeathcheckbox.Checked = info.Bind.HasFlag(BindMode.BreakOnDeath);
+            NoWeddingRingcheckbox.Checked = info.Bind.HasFlag(BindMode.NoWeddingRing);
 
 
             NeedIdentifycheckbox.Checked = info.NeedIdentify;
             ShowGroupPickupcheckbox.Checked = info.ShowGroupPickup;
-            BindOnEquipcheckbox.Checked = info.BindOnEquip;
+            
 
             ParalysischeckBox.Checked = info.Unique.HasFlag(SpecialItemMode.Paralize);
             TeleportcheckBox.Checked = info.Unique.HasFlag(SpecialItemMode.Teleport);
@@ -384,10 +387,13 @@ namespace Server
                 if (Bind_destroyondropcheckbox.Checked != info.Bind.HasFlag(BindMode.DestroyOnDrop)) Bind_destroyondropcheckbox.CheckState = CheckState.Indeterminate;
                 if (Bind_dontdeathdropcheckbox.Checked != info.Bind.HasFlag(BindMode.DontDeathdrop)) Bind_dontdeathdropcheckbox.CheckState = CheckState.Indeterminate;
                 if (Bind_dontdropcheckbox.Checked != info.Bind.HasFlag(BindMode.DontDrop)) Bind_dontdropcheckbox.CheckState = CheckState.Indeterminate;
-                if (Bind_DontSpecialRepaircheckBox.Checked != info.BindNoSRepair) Bind_DontSpecialRepaircheckBox.CheckState = CheckState.Indeterminate;
+                if (Bind_DontSpecialRepaircheckBox.Checked != info.Bind.HasFlag(BindMode.NoSRepair)) Bind_DontSpecialRepaircheckBox.CheckState = CheckState.Indeterminate;
+                if (BindOnEquipcheckbox.Checked != info.Bind.HasFlag(BindMode.BindOnEquip)) BindOnEquipcheckbox.CheckState = CheckState.Indeterminate;
+                if (BreakOnDeathcheckbox.Checked != info.Bind.HasFlag(BindMode.BreakOnDeath)) BreakOnDeathcheckbox.CheckState = CheckState.Indeterminate;
+                if (NoWeddingRingcheckbox.Checked != info.Bind.HasFlag(BindMode.NoWeddingRing)) NoWeddingRingcheckbox.CheckState = CheckState.Indeterminate;
+
                 if (NeedIdentifycheckbox.Checked != info.NeedIdentify) NeedIdentifycheckbox.CheckState = CheckState.Indeterminate;
                 if (ShowGroupPickupcheckbox.Checked != info.ShowGroupPickup) ShowGroupPickupcheckbox.CheckState = CheckState.Indeterminate;
-                if (BindOnEquipcheckbox.Checked != info.BindOnEquip) BindOnEquipcheckbox.CheckState = CheckState.Indeterminate;
 
                 if (ParalysischeckBox.Checked != info.Unique.HasFlag(SpecialItemMode.Paralize)) ParalysischeckBox.CheckState = CheckState.Indeterminate;
                 if (TeleportcheckBox.Checked != info.Unique.HasFlag(SpecialItemMode.Teleport)) TeleportcheckBox.CheckState = CheckState.Indeterminate;
@@ -417,7 +423,13 @@ namespace Server
 
             for (int i = 0; i < ItemInfoListBox.Items.Count; i++) selected.Add(ItemInfoListBox.GetSelected(i));
             ItemInfoListBox.Items.Clear();
-            for (int i = 0; i < Envir.ItemInfoList.Count; i++) ItemInfoListBox.Items.Add(Envir.ItemInfoList[i]);
+            for (int i = 0; i < Envir.ItemInfoList.Count; i++)
+            {
+                if (ITypeFilterComboBox.SelectedItem == null ||
+                    ITypeFilterComboBox.SelectedIndex == ITypeFilterComboBox.Items.Count - 1 ||
+                    Envir.ItemInfoList[i].Type == (ItemType)ITypeFilterComboBox.SelectedItem)
+                    ItemInfoListBox.Items.Add(Envir.ItemInfoList[i]);
+            }
             for (int i = 0; i < selected.Count; i++) ItemInfoListBox.SetSelected(i, selected[i]);
 
             ItemInfoListBox.SelectedIndexChanged += ItemInfoListBox_SelectedIndexChanged;
@@ -1399,7 +1411,7 @@ namespace Server
             if (ActiveControl != sender) return;
 
             for (int i = 0; i < _selectedItemInfos.Count; i++)
-                _selectedItemInfos[i].BindOnEquip = BindOnEquipcheckbox.Checked;
+                _selectedItemInfos[i].Bind = (BindOnEquipcheckbox.Checked ? _selectedItemInfos[i].Bind |= BindMode.BindOnEquip : _selectedItemInfos[i].Bind ^= BindMode.BindOnEquip);
         }
 
         private void MPratetextBox_TextChanged(object sender, EventArgs e)
@@ -1604,7 +1616,7 @@ namespace Server
             if (ActiveControl != sender) return;
 
             for (int i = 0; i < _selectedItemInfos.Count; i++)
-                _selectedItemInfos[i].BindNoSRepair = Bind_DontSpecialRepaircheckBox.Checked;
+                _selectedItemInfos[i].Bind = (Bind_DontSpecialRepaircheckBox.Checked ? _selectedItemInfos[i].Bind |= BindMode.NoSRepair : _selectedItemInfos[i].Bind ^= BindMode.NoSRepair);
         }
 
         private void LightIntensitytextBox_TextChanged(object sender, EventArgs e)
@@ -1697,6 +1709,38 @@ namespace Server
 
             for (int i = 0; i < _selectedItemInfos.Count; i++)
                 _selectedItemInfos[i].CanAwakening = CanAwaken.Checked;
+        }
+
+        private void BreakOnDeathcheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (ActiveControl != sender) return;
+
+            for (int i = 0; i < _selectedItemInfos.Count; i++)
+                _selectedItemInfos[i].Bind = (BreakOnDeathcheckbox.Checked ? _selectedItemInfos[i].Bind |= BindMode.BreakOnDeath : _selectedItemInfos[i].Bind ^= BindMode.BreakOnDeath);
+        }
+
+        private void ItemInfoForm_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Gameshop_button_Click(object sender, EventArgs e)
+        {
+            for (int i = 0; i < _selectedItemInfos.Count; i++)
+                Envir.AddToGameShop(_selectedItemInfos[i]);
+            Envir.SaveDB();
+        }
+
+        private void NoWeddingRingcheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (ActiveControl != sender) return;
+            for (int i = 0; i < _selectedItemInfos.Count; i++)
+                _selectedItemInfos[i].Bind = (NoWeddingRingcheckbox.Checked ? _selectedItemInfos[i].Bind |= BindMode.NoWeddingRing : _selectedItemInfos[i].Bind ^= BindMode.NoWeddingRing);
+        }
+
+        private void label50_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

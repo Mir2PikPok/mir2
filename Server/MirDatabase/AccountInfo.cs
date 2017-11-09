@@ -28,6 +28,7 @@ namespace Server.MirDatabase
         public bool Banned;
         public string BanReason = string.Empty;
         public DateTime ExpiryDate;
+        public int WrongPasswordCount;
 
         public string LastIP = string.Empty;
         public DateTime LastDate;
@@ -36,6 +37,7 @@ namespace Server.MirDatabase
 
         public UserItem[] Storage = new UserItem[80];
         public uint Gold;
+        public uint Credit;
 
         public ListViewItem ListItem;
         public MirConnection Connection;
@@ -85,19 +87,37 @@ namespace Server.MirDatabase
             int count = reader.ReadInt32();
 
             for (int i = 0; i < count; i++)
-                Characters.Add(new CharacterInfo(reader) {AccountInfo = this});
+            {
+                Characters.Add(new CharacterInfo(reader) { AccountInfo = this });
+                
+            }
 
 
             Gold = reader.ReadUInt32();
+            if (Envir.LoadVersion >= 63) Credit = reader.ReadUInt32();
+
             count = reader.ReadInt32();
             for (int i = 0; i < count; i++)
             {
                 if (!reader.ReadBoolean()) continue;
-                UserItem item = new UserItem(reader);
+                UserItem item = new UserItem(reader, Envir.LoadVersion, Envir.LoadCustomVersion);
                 if (SMain.Envir.BindItem(item) && i < Storage.Length)
                     Storage[i] = item;
             }
             if (Envir.LoadVersion >= 10) AdminAccount = reader.ReadBoolean();
+            if (!AdminAccount)
+            {
+                for (int i = 0; i < Characters.Count; i++)
+                {
+                    if (Characters[i] == null) continue;
+                    if (Characters[i].Deleted) continue;
+                    if ((DateTime.Now - Characters[i].LastDate).TotalDays > 13) continue;
+                    if ((Characters[i].Level >= SMain.Envir.RankBottomLevel[0]) || (Characters[i].Level >= SMain.Envir.RankBottomLevel[(byte)Characters[i].Class + 1]))
+                    {
+                        SMain.Envir.CheckRankUpdate(Characters[i]);
+                    }
+                }
+            }
         }
 
 
@@ -128,6 +148,7 @@ namespace Server.MirDatabase
                 Characters[i].Save(writer);
 
             writer.Write(Gold);
+            writer.Write(Credit);
             writer.Write(Storage.Length);
             for (int i = 0; i < Storage.Length; i++)
             {

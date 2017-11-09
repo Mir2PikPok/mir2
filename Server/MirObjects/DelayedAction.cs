@@ -9,12 +9,15 @@ namespace Server.MirObjects
     {
         Magic,
         Damage,
+        RangeDamage,
         Spawn,
+        Die,
         Recall,
         MapMovement,
         Mine,
         NPC,
         Poison,
+        DamageIndicator
     }
 
     public class DelayedAction
@@ -23,6 +26,8 @@ namespace Server.MirObjects
         public long Time;
         public long StartTime;
         public object[] Params;
+
+        public bool FlaggedToRemove;
 
         public DelayedAction(DelayedType type, long time, params object[] p)
         {

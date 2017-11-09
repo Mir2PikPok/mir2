@@ -14,7 +14,7 @@ namespace Server.MirObjects
 
         public IntelligentCreatureType petType = IntelligentCreatureType.None;
 
-        public ItemGrade GradeFilter = ItemGrade.None;
+        public ItemGrade GradeFilter = ItemGrade.无;
 
         public IntelligentCreatureRules CreatureRules = new IntelligentCreatureRules();
         public IntelligentCreatureItemFilter ItemFilter = new IntelligentCreatureItemFilter();
@@ -34,7 +34,7 @@ namespace Server.MirObjects
         public const long delayedpickupDelay = Settings.Second;//1 second
 
         public long blackstoneTime = 0;
-        public const long blackstoneProduceTime = 3 * Settings.Hour;//3 hours in seconds
+        public const long blackstoneProduceTime = 10800;//3 hours in seconds
 
         public long pearlTicker = 0;
         public const long pearlProduceCount = 1000;//1000 items = 1 pearl
@@ -74,6 +74,11 @@ namespace Server.MirObjects
             {
                 return !Dead && Envir.Time > AttackTime && Envir.Time > ActionTime;
             }
+        }
+
+        public override ObjectType Race
+        {
+            get { return ObjectType.Creature; }
         }
 
 
@@ -153,11 +158,13 @@ namespace Server.MirObjects
 
         public void ProcessAnimVariant()
         {
+            
             if (Envir.Time > animvariantTicker)
             {
                 animvariantTicker = Envir.Time + animvariantDelay;
                 ActionTime = Envir.Time + 300;
                 AttackTime = Envir.Time + AttackSpeed;
+
                 switch (petType)
                 {
                     case IntelligentCreatureType.BabyDragon:
@@ -575,8 +582,11 @@ namespace Server.MirObjects
                         for (int j = 0; j < Master.GroupMembers.Count; j++)
                             Master.GroupMembers[j].ReceiveChat(Name + " Picked up: {" + item.Item.Name + "}", ChatType.Hint);
 
-                    if(item.Item.Info.Grade == ItemGrade.Mythical || item.Item.Info.Grade == ItemGrade.Legendary)
+                    if (item.Item.Info.Grade == ItemGrade.史诗 || item.Item.Info.Grade == ItemGrade.传奇)
+                    {
                         Master.ReceiveChat("Pet Picked up: {" + item.Item.Name + "}", ChatType.Hint);
+                        ((PlayerObject)Master).Enqueue(new S.IntelligentCreaturePickup { ObjectID = ObjectID });
+                    }
 
                     ((PlayerObject)Master).GainItem(item.Item);
                     CurrentMap.RemoveObject(ob);
@@ -603,21 +613,21 @@ namespace Server.MirObjects
 
             switch (iType)
             {
-                case ItemType.Nothing:// <---- im not sure if any item will ever hold this ItemType but better to prevent then cure
+                case ItemType.无:// <---- im not sure if any item will ever hold this ItemType but better to prevent then cure
                     return false;
-                case ItemType.Weapon:
+                case ItemType.武器:
                     return ItemFilter.PetPickupWeapons;
-                case ItemType.Armour:
+                case ItemType.护甲:
                     return ItemFilter.PetPickupArmours;
-                case ItemType.Helmet:
+                case ItemType.头盔:
                     return ItemFilter.PetPickupHelmets;
-                case ItemType.Boots:
+                case ItemType.鞋:
                     return ItemFilter.PetPickupBoots;
-                case ItemType.Belt:
+                case ItemType.腰带:
                     return ItemFilter.PetPickupBelts;
-                case ItemType.Necklace:
-                case ItemType.Bracelet:
-                case ItemType.Ring:
+                case ItemType.项链:
+                case ItemType.手镯:
+                case ItemType.戒指:
                     return ItemFilter.PetPickupAccessories;
                 default:
                     return ItemFilter.PetPickupOthers;
@@ -762,7 +772,7 @@ namespace Server.MirObjects
             return 0;
         }
 
-        public override void ApplyPoison(Poison p, MapObject Caster = null, bool NoResist = false)
+        public override void ApplyPoison(Poison p, MapObject Caster = null, bool NoResist = false, bool ignoreDefence = true)
         {
             //FindTarget();
         }

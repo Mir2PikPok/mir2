@@ -13,8 +13,8 @@ namespace LibraryEditor
     public partial class LMain : Form
     {
         private readonly Dictionary<int, int> _indexList = new Dictionary<int, int>();
-        private MLibrary _library;
-        private MLibrary.MImage _selectedImage, _exportImage;
+        private MLibraryV2 _library;
+        private MLibraryV2.MImage _selectedImage, _exportImage;
         private Image _originalImage;
 
         [DllImport("user32.dll")]
@@ -65,9 +65,8 @@ namespace LibraryEditor
                 toolStripProgressBar.Value = 0;
 
                 MessageBox.Show(
-                    string.Format("Successfully converted {0} {1}",
-                    (OpenWeMadeDialog.FileNames.Length).ToString(),
-                    (OpenWeMadeDialog.FileNames.Length > 1) ? "libraries" : "library"));
+                    string.Format("成功转换 {0}",
+                        OpenWeMadeDialog.FileNames.Length));
             }
             else if (Path.GetExtension(files[0]).ToUpper() == ".LIB")
             {
@@ -77,7 +76,7 @@ namespace LibraryEditor
                 _indexList.Clear();
 
                 if (_library != null) _library.Close();
-                _library = new MLibrary(files[0]);
+                _library = new MLibraryV2(files[0]);
                 PreviewListView.VirtualListSize = _library.Images.Count;
                 PreviewListView.RedrawItems(0, PreviewListView.Items.Count - 1, true);
 
@@ -101,8 +100,8 @@ namespace LibraryEditor
             ImageBox.Image = null;
             ZoomTrackBar.Value = 1;
 
-            WidthLabel.Text = "<No Image>";
-            HeightLabel.Text = "<No Image>";
+            WidthLabel.Text = "<无图片>";
+            HeightLabel.Text = "<无图片>";
             OffSetXTextBox.Text = string.Empty;
             OffSetYTextBox.Text = string.Empty;
             OffSetXTextBox.BackColor = SystemColors.Window;
@@ -137,12 +136,12 @@ namespace LibraryEditor
             if (PreviewListView.SelectedIndices.Count > 1)
             {
                 toolStripStatusLabel.ForeColor = Color.Red;
-                toolStripStatusLabel.Text = "Multiple images selected.";
+                toolStripStatusLabel.Text = "选择了多张图片.";
             }
             else
             {
                 toolStripStatusLabel.ForeColor = SystemColors.ControlText;
-                toolStripStatusLabel.Text = "Selected Image: " + string.Format("{0} / {1}",
+                toolStripStatusLabel.Text = "已选择图片: " + string.Format("{0} / {1}",
                 PreviewListView.SelectedIndices[0].ToString(),
                 (PreviewListView.Items.Count - 1).ToString());
             }
@@ -174,7 +173,7 @@ namespace LibraryEditor
 
             List<string> fileNames = new List<string>(ImportImageDialog.FileNames);
 
-            fileNames.Sort();
+            //fileNames.Sort();
             toolStripProgressBar.Value = 0;
             toolStripProgressBar.Maximum = fileNames.Count;
 
@@ -210,6 +209,7 @@ namespace LibraryEditor
 
                 _library.AddImage(image, x, y);
                 toolStripProgressBar.Value++;
+                //image.Dispose();
             }
 
             PreviewListView.VirtualListSize = _library.Images.Count;
@@ -221,7 +221,7 @@ namespace LibraryEditor
             if (SaveLibraryDialog.ShowDialog() != DialogResult.OK) return;
 
             if (_library != null) _library.Close();
-            _library = new MLibrary(SaveLibraryDialog.FileName);
+            _library = new MLibraryV2(SaveLibraryDialog.FileName);
             PreviewListView.VirtualListSize = 0;
             _library.Save();
         }
@@ -236,7 +236,7 @@ namespace LibraryEditor
             _indexList.Clear();
 
             if (_library != null) _library.Close();
-            _library = new MLibrary(OpenLibraryDialog.FileName);
+            _library = new MLibraryV2(OpenLibraryDialog.FileName);
             PreviewListView.VirtualListSize = _library.Images.Count;
 
             // Show .Lib path in application title.
@@ -274,8 +274,8 @@ namespace LibraryEditor
             if (_library.FileName == null) return;
             if (PreviewListView.SelectedIndices.Count == 0) return;
 
-            if (MessageBox.Show("Are you sure you want to delete the selected Image?",
-                "Delete Selected.",
+            if (MessageBox.Show("确定要删除选中的图片?",
+                "删除选中.",
                 MessageBoxButtons.YesNoCancel) != DialogResult.Yes) return;
 
             List<int> removeList = new List<int>();
@@ -310,6 +310,11 @@ namespace LibraryEditor
                                     WTLLibrary WTLlib = new WTLLibrary(OpenWeMadeDialog.FileNames[i]);
                                     WTLlib.ToMLibrary();
                                 }
+                                else if (Path.GetExtension(OpenWeMadeDialog.FileNames[i]) == ".Lib")
+                                {
+                                    MLibrary v1Lib = new MLibrary(OpenWeMadeDialog.FileNames[i]);
+                                    v1Lib.ToMLibrary();
+                                }
                                 else
                                 {
                                     WeMadeLibrary WILlib = new WeMadeLibrary(OpenWeMadeDialog.FileNames[i]);
@@ -325,9 +330,8 @@ namespace LibraryEditor
 
             toolStripProgressBar.Value = 0;
 
-            MessageBox.Show(string.Format("Successfully converted {0} {1}",
-                (OpenWeMadeDialog.FileNames.Length).ToString(),
-                (OpenWeMadeDialog.FileNames.Length > 1) ? "libraries" : "library"));
+            MessageBox.Show(string.Format("成功转换 {0}",
+                OpenWeMadeDialog.FileNames.Length));
         }
 
         private void copyToToolStripMenuItem_Click(object sender, EventArgs e)
@@ -335,7 +339,7 @@ namespace LibraryEditor
             if (PreviewListView.SelectedIndices.Count == 0) return;
             if (SaveLibraryDialog.ShowDialog() != DialogResult.OK) return;
 
-            MLibrary tempLibrary = new MLibrary(SaveLibraryDialog.FileName);
+            MLibraryV2 tempLibrary = new MLibraryV2(SaveLibraryDialog.FileName);
 
             List<int> copyList = new List<int>();
 
@@ -346,7 +350,7 @@ namespace LibraryEditor
 
             for (int i = 0; i < copyList.Count; i++)
             {
-                MLibrary.MImage image = _library.GetMImage(copyList[i]);
+                MLibraryV2.MImage image = _library.GetMImage(copyList[i]);
                 tempLibrary.AddImage(image.Image, image.X, image.Y);
             }
 
@@ -355,8 +359,8 @@ namespace LibraryEditor
 
         private void removeBlanksToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Are you sure you want to remove the blank images?",
-                "Remove Blanks",
+            if (MessageBox.Show("确定要删除空白图片?",
+                "删除空白",
                 MessageBoxButtons.YesNo) != DialogResult.Yes) return;
 
             _library.RemoveBlanks();
@@ -377,13 +381,13 @@ namespace LibraryEditor
 
             OpenLibraryDialog.Multiselect = false;
 
-            MLibrary.Load = false;
+            MLibraryV2.Load = false;
 
             int count = 0;
 
             for (int i = 0; i < OpenLibraryDialog.FileNames.Length; i++)
             {
-                MLibrary library = new MLibrary(OpenLibraryDialog.FileNames[i]);
+                MLibraryV2 library = new MLibraryV2(OpenLibraryDialog.FileNames[i]);
 
                 for (int x = 0; x < library.Count; x++)
                 {
@@ -394,7 +398,7 @@ namespace LibraryEditor
                 library.Close();
             }
 
-            MLibrary.Load = true;
+            MLibraryV2.Load = true;
             MessageBox.Show(count.ToString());
         }
 
@@ -416,7 +420,7 @@ namespace LibraryEditor
 
             for (int i = 0; i < PreviewListView.SelectedIndices.Count; i++)
             {
-                MLibrary.MImage image = _library.GetMImage(PreviewListView.SelectedIndices[i]);
+                MLibraryV2.MImage image = _library.GetMImage(PreviewListView.SelectedIndices[i]);
                 image.X = temp;
             }
         }
@@ -439,7 +443,7 @@ namespace LibraryEditor
 
             for (int i = 0; i < PreviewListView.SelectedIndices.Count; i++)
             {
-                MLibrary.MImage image = _library.GetMImage(PreviewListView.SelectedIndices[i]);
+                MLibraryV2.MImage image = _library.GetMImage(PreviewListView.SelectedIndices[i]);
                 image.Y = temp;
             }
         }
@@ -453,14 +457,14 @@ namespace LibraryEditor
 
             List<string> fileNames = new List<string>(ImportImageDialog.FileNames);
 
-            fileNames.Sort();
+            //fileNames.Sort();
 
             int index = PreviewListView.SelectedIndices[0];
 
             toolStripProgressBar.Value = 0;
             toolStripProgressBar.Maximum = fileNames.Count;
 
-            for (int i = 0; i < fileNames.Count; i++)
+            for (int i = fileNames.Count - 1; i >= 0; i--)
             {
                 string fileName = fileNames[i];
 
@@ -504,28 +508,13 @@ namespace LibraryEditor
 
         private void safeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Are you sure you want to remove the blank images?",
-                "Remove Blanks", MessageBoxButtons.YesNo) != DialogResult.Yes) return;
+            if (MessageBox.Show("确定要删除空白图片?",
+                "删除空白", MessageBoxButtons.YesNo) != DialogResult.Yes) return;
 
             _library.RemoveBlanks(true);
             ImageList.Images.Clear();
             _indexList.Clear();
             PreviewListView.VirtualListSize = _library.Count;
-        }
-
-        private void convertlibsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (MessageBox.Show("Are you sure you want to convert every .Lib file in the folder to version 1?\nThis will break any .Lib file that is not version 0!",
-                "Convert lib folder", MessageBoxButtons.YesNo) != DialogResult.Yes) return;
-
-            MessageBox.Show("Select any .Lib file you want.\nThe code will convert all .Lib files in this folder + sub folders.\nThis will take a while.\nYou will get a message when its finished!\nRemember to backup first!");
-
-            if (OpenLibraryDialog.ShowDialog() != DialogResult.OK) return;
-            string MainFolder = Path.GetDirectoryName(OpenLibraryDialog.FileName);
-            string NewFolder = MainFolder + "\\Converted\\";
-            ProcessDir(MainFolder, 0, NewFolder);
-
-            MessageBox.Show("Folder processing finally finished.\n Location: " + NewFolder);
         }
 
         private const int HowDeepToScan = 6;
@@ -540,13 +529,13 @@ namespace LibraryEditor
                 {
                     if (Directory.Exists(outputDir) != true) Directory.CreateDirectory(outputDir);
                     MLibraryv0 OldLibrary = new MLibraryv0(fileName);
-                    MLibrary NewLibrary = new MLibrary(outputDir + Path.GetFileName(fileName)) { Images = new List<MLibrary.MImage>(), IndexList = new List<int>(), Count = OldLibrary.Images.Count }; ;
+                    MLibraryV2 NewLibrary = new MLibraryV2(outputDir + Path.GetFileName(fileName)) { Images = new List<MLibraryV2.MImage>(), IndexList = new List<int>(), Count = OldLibrary.Images.Count }; ;
                     for (int i = 0; i < OldLibrary.Images.Count; i++)
                         NewLibrary.Images.Add(null);
                     for (int j = 0; j < OldLibrary.Images.Count; j++)
                     {
                         MLibraryv0.MImage oldimage = OldLibrary.GetMImage(j);
-                        NewLibrary.Images[j] = new MLibrary.MImage(oldimage.FBytes, oldimage.Width, oldimage.Height) { X = oldimage.X, Y = oldimage.Y };
+                        NewLibrary.Images[j] = new MLibraryV2.MImage(oldimage.FBytes, oldimage.Width, oldimage.Height) { X = oldimage.X, Y = oldimage.Y };
                     }
                     NewLibrary.Save();
                     for (int i = 0; i < NewLibrary.Images.Count; i++)
@@ -596,30 +585,42 @@ namespace LibraryEditor
             if (_library.FileName == null) return;
             if (PreviewListView.SelectedIndices.Count == 0) return;
 
-            if (ImageBox.Image != null)
+            string _fileName = Path.GetFileName(OpenLibraryDialog.FileName);
+            string _newName = _fileName.Remove(_fileName.IndexOf('.'));
+            string _folder = Application.StartupPath + "\\Exported\\" + _newName + "\\";
+
+            Bitmap blank = new Bitmap(1, 1);
+
+            // Create the folder if it doesn't exist.
+            (new FileInfo(_folder)).Directory.Create();
+
+            ListView.SelectedIndexCollection _col = PreviewListView.SelectedIndices;
+
+            toolStripProgressBar.Value = 0;
+            toolStripProgressBar.Maximum = _col.Count;
+
+            for (int i = _col[0]; i < (_col[0] + _col.Count); i++)
             {
-                string _fileName = Path.GetFileName(OpenLibraryDialog.FileName);
-                string _newName = _fileName.Remove(_fileName.IndexOf('.'));
-                string _folder = Application.StartupPath + "\\Exported\\" + _newName + "\\";
-
-                // Create the folder if it doesn't exist.
-                (new FileInfo(_folder)).Directory.Create();
-
-                ListView.SelectedIndexCollection _col = PreviewListView.SelectedIndices;
-
-                toolStripProgressBar.Value = 0;
-                toolStripProgressBar.Maximum = _col.Count;
-
-                for (int i = _col[0]; i < (_col[0] + _col.Count); i++)
+                _exportImage = _library.GetMImage(i);
+                if (_exportImage.Image == null)
                 {
-                    _exportImage = _library.GetMImage(i);
+                    blank.Save(_folder + i.ToString() + ".bmp", ImageFormat.Bmp);
+                }
+                else
+                {
                     _exportImage.Image.Save(_folder + i.ToString() + ".bmp", ImageFormat.Bmp);
-                    toolStripProgressBar.Value++;
                 }
 
-                toolStripProgressBar.Value = 0;
-                MessageBox.Show("Saving to " + _folder + "...", "Image Saved", MessageBoxButtons.OK);
+                toolStripProgressBar.Value++;
+
+                if (!Directory.Exists(_folder + "/Placements/"))
+                    Directory.CreateDirectory(_folder + "/Placements/");
+
+                File.WriteAllLines(_folder + "/Placements/" + i.ToString() + ".txt", new string[] { _exportImage.X.ToString(), _exportImage.Y.ToString() });
             }
+
+            toolStripProgressBar.Value = 0;
+            MessageBox.Show("正在保存 " + _folder + "...", "图片已保存", MessageBoxButtons.OK);
         }
 
         // Don't let the splitter go out of sight on resizing.
@@ -673,7 +674,7 @@ namespace LibraryEditor
                     ImageBox.Image = _newBMP;
 
                     toolStripStatusLabel.ForeColor = SystemColors.ControlText;
-                    toolStripStatusLabel.Text = "Selected Image: " + string.Format("{0} / {1}",
+                    toolStripStatusLabel.Text = "已选择图片: " + string.Format("{0} / {1}",
                         PreviewListView.SelectedIndices[0].ToString(),
                         (PreviewListView.Items.Count - 1).ToString());
                 }
@@ -705,7 +706,7 @@ namespace LibraryEditor
             if (_col.Count > 1)
             {
                 toolStripStatusLabel.ForeColor = Color.Red;
-                toolStripStatusLabel.Text = "Multiple images selected.";
+                toolStripStatusLabel.Text = "选择了多张图片.";
             }
         }
 
